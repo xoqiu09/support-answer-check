@@ -1,0 +1,12 @@
+{"case_id":"h01","verdict":"pass","reasons":[]}
+{"case_id":"h02","verdict":"pass","reasons":[]}
+{"case_id":"h03","verdict":"pass","reasons":[]}
+{"case_id":"h04","verdict":"pass","reasons":[]}
+{"case_id":"h05","verdict":"pass","reasons":[]}
+{"case_id":"h06","verdict":"pass","reasons":[]}
+{"case_id":"h07","verdict":"fail","reasons":["WRONG_FACT"]}
+{"case_id":"h08","verdict":"fail","reasons":["WRONG_FACT"]}
+{"case_id":"h09","verdict":"fail","reasons":["WRONG_FACT"]}
+{"case_id":"h10","verdict":"fail","reasons":["WRONG_FACT"]}
+{"case_id":"h11","verdict":"fail","reasons":["WRONG_FACT"]}
+{"case_id":"h12","verdict":"fail","reasons":["WRONG_FACT"]}

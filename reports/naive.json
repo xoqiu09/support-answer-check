@@ -5,7 +5,7 @@
     "pass": 10,
     "fail": 30,
     "by_reason": {
-      "WRONG_FACT": 24,
+      "WRONG_FACT": 22,
       "NO_CITATION": 0,
       "BAD_CITATION": 11,
       "MISSED_HANDOFF": 14,
@@ -364,10 +364,6 @@
       "verdict": "fail",
       "reasons": [
         {
-          "label": "WRONG_FACT",
-          "detail": "缺少「核验身份」"
-        },
-        {
           "label": "MISSED_HANDOFF",
           "detail": "用例要求转人工，回答未转人工"
         }
@@ -435,10 +431,6 @@
       "case_id": "c40",
       "verdict": "fail",
       "reasons": [
-        {
-          "label": "WRONG_FACT",
-          "detail": "缺少「核验身份」"
-        },
         {
           "label": "MISSED_HANDOFF",
           "detail": "用例要求转人工，回答未转人工"

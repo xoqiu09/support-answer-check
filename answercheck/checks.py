@@ -2,6 +2,18 @@
 
 import re
 
+from .facts import contains_fact, normalize_fact_text
+
+
+# 必须出现的事实前后带明确否定（如「无需核验身份」）时，不算答出了这条事实。
+_NEGATION_BEFORE = r"(?:无[须需]|不(?:必|用|须|需要?)|可(?:以)?不|免于)\s*(?:(?:先|再|进行|通过|做)\s*)*"
+_NEGATION_AFTER = r"\s*(?:不(?:是必需的|需要)|可(?:以)?(?:跳过|省略))"
+
+
+def _without_negated(text, phrase):
+    escaped = re.escape(phrase)
+    return re.sub(_NEGATION_BEFORE + escaped + "|" + escaped + _NEGATION_AFTER, " ", text)
+
 
 REASON_LABELS = (
     "WRONG_FACT",
@@ -51,7 +63,7 @@ def validate_data(passages, cases, answers=None):
     return errors
 
 
-def check_answer(case, answer, passages, policy):
+def check_answer(case, answer, passages, policy, synonyms=None):
     """Return the reasons for failing, in the specified label order."""
     expect = case["expect"]
     facts = expect["facts"]
@@ -59,10 +71,18 @@ def check_answer(case, answer, passages, policy):
     citations = answer["citations"]
     reasons = []
 
+    fact_text = normalize_fact_text(text, synonyms)
+
+    def matches(phrase, *, required=False):
+        normalized = normalize_fact_text(phrase, synonyms)
+        if required:
+            return contains_fact(_without_negated(fact_text, normalized), normalized)
+        return contains_fact(fact_text, normalized)
+
     wrong_facts = [f"缺少「{fact['must_include']}」" for fact in facts
-                   if fact["must_include"] not in text]
+                   if not matches(fact["must_include"], required=True)]
     wrong_facts.extend(f"出现禁止内容「{phrase}」" for phrase in expect["must_not_include"]
-                       if phrase in text)
+                       if matches(phrase))
     _add_reason(reasons, "WRONG_FACT", wrong_facts)
 
     if facts and not citations:

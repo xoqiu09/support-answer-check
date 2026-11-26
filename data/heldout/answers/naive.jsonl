@@ -1,0 +1,12 @@
+{"case_id":"h01","answer":"随整机附带的遥控器保修六个月。","citations":["warranty#1"],"handoff":false}
+{"case_id":"h02","answer":"退件验收通过后，三个工作日内发起原路退款。","citations":["returns#4"],"handoff":false}
+{"case_id":"h03","answer":"这件商品是每一百积分抵扣一块。","citations":["membership#3"],"handoff":false}
+{"case_id":"h04","answer":"离安装预约开始还有二十四小时或更久，就能在官方订单页改约。","citations":["install#3"],"handoff":false}
+{"case_id":"h05","answer":"积分到期就会自动作废。","citations":["membership#2"],"handoff":false}
+{"case_id":"h06","answer":"提交注销时要核验身份。","citations":["privacy#4"],"handoff":false}
+{"case_id":"h07","answer":"随整机附带的遥控器保修 16 个月。","citations":["warranty#1"],"handoff":false}
+{"case_id":"h08","answer":"退件验收通过后，三日内发起退款，假期也算。","citations":["returns#4"],"handoff":false}
+{"case_id":"h09","answer":"每实付 21 元获得一积分。","citations":["membership#1"],"handoff":false}
+{"case_id":"h10","answer":"距预约开始还有二十四天或更久，才能在订单页改约。","citations":["install#3"],"handoff":false}
+{"case_id":"h11","answer":"积分到期也不会自动作废，还能照常抵扣。","citations":["membership#2"],"handoff":false}
+{"case_id":"h12","answer":"换绑只要验证新号码就行。","citations":["privacy#3"],"handoff":false}
