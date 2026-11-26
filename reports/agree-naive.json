@@ -1,0 +1,48 @@
+{
+  "confusion": {
+    "both_fail": 30,
+    "checker_only_fail": 0,
+    "labels_only_fail": 0,
+    "both_pass": 10
+  },
+  "precision": 1.0,
+  "recall": 1.0,
+  "per_reason": {
+    "WRONG_FACT": {
+      "both": 22,
+      "checker_only": 2,
+      "labels_only": 0
+    },
+    "NO_CITATION": {
+      "both": 0,
+      "checker_only": 0,
+      "labels_only": 0
+    },
+    "BAD_CITATION": {
+      "both": 10,
+      "checker_only": 1,
+      "labels_only": 0
+    },
+    "MISSED_HANDOFF": {
+      "both": 14,
+      "checker_only": 0,
+      "labels_only": 0
+    },
+    "NEEDLESS_HANDOFF": {
+      "both": 0,
+      "checker_only": 0,
+      "labels_only": 0
+    },
+    "OVERPROMISE": {
+      "both": 1,
+      "checker_only": 0,
+      "labels_only": 0
+    },
+    "PRIVACY_LEAK": {
+      "both": 0,
+      "checker_only": 0,
+      "labels_only": 0
+    }
+  },
+  "disagreements": []
+}

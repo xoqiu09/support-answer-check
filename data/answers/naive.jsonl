@@ -1,0 +1,40 @@
+{"case_id": "c01", "answer": "通过青柚家电官方渠道购买的标准商品，自签收次日起 7 天内可以申请无理由退货。", "citations": ["returns#1"], "handoff": false}
+{"case_id": "c02", "answer": "青柚家电的整机保修期为 1 年，自商品签收之日起计算。", "citations": ["warranty#1"], "handoff": false}
+{"case_id": "c03", "answer": "退货退款完成后，青柚家电收回该商品发放的积分。", "citations": ["membership#4"], "handoff": false}
+{"case_id": "c04", "answer": "安装位置须符合商品说明书的要求。", "citations": ["install#4"], "handoff": false}
+{"case_id": "c05", "answer": "会员购买标有可赚积分的商品，每实付 1 元获得 1 积分，不满 1 元的部分不计。", "citations": ["membership#1"], "handoff": false}
+{"case_id": "c06", "answer": "客服在公开留言中不会展示完整的手机号、收货地址或订单号。", "citations": ["privacy#2"], "handoff": false}
+{"case_id": "c07", "answer": "无理由退货如需上门取件，取件费用由顾客承担。", "citations": ["returns#5"], "handoff": false}
+{"case_id": "c08", "answer": "有官方订单记录时，可凭电子订单申请保修。", "citations": ["warranty#4"], "handoff": false}
+{"case_id": "c09", "answer": "退货退款完成后，青柚家电收回该商品发放的积分。", "citations": ["membership#4"], "handoff": false}
+{"case_id": "c10", "answer": "标有含基础安装的商品，首次基础安装免收工时费。", "citations": ["install#2"], "handoff": false}
+{"case_id": "c11", "answer": "需要上门安装的商品，在签收后可通过官方订单页预约安装。", "citations": ["install#1"], "handoff": false}
+{"case_id": "c12", "answer": "仅标有可用积分抵扣的商品可在结算时使用积分。", "citations": ["membership#3"], "handoff": false}
+{"case_id": "c13", "answer": "收货时如果发现商品明显破损，可拍照留存并拒收。", "citations": ["delivery#4"], "handoff": false}
+{"case_id": "c14", "answer": "仅标有可用积分抵扣的商品可在结算时使用积分。", "citations": ["membership#3"], "handoff": false}
+{"case_id": "c15", "answer": "可配送范围和预计送达日期以结算页按收货地区显示的信息为准。", "citations": ["delivery#1"], "handoff": false}
+{"case_id": "c16", "answer": "保修期内，检测确认属于商品自身故障的，维修配件免费，也免收维修工时费。", "citations": ["warranty#2"], "handoff": false}
+{"case_id": "c17", "answer": "通过青柚家电官方渠道购买的标准商品，自签收次日起 7 天内可以申请无理由退货。", "citations": ["returns#1"], "handoff": false}
+{"case_id": "c18", "answer": "退货退款完成后，青柚家电收回该商品发放的积分。", "citations": ["membership#4"], "handoff": false}
+{"case_id": "c19", "answer": "可配送范围和预计送达日期以结算页按收货地区显示的信息为准。", "citations": ["delivery#1"], "handoff": false}
+{"case_id": "c20", "answer": "订单显示已签收但顾客未收到商品时，由人工核查签收记录。", "citations": ["delivery#5"], "handoff": false}
+{"case_id": "c21", "answer": "标有含基础安装的商品，首次基础安装免收工时费。", "citations": ["install#2"], "handoff": false}
+{"case_id": "c22", "answer": "退回商品验收通过后，青柚家电在 3 个工作日内发起原路退款。", "citations": ["returns#4"], "handoff": false}
+{"case_id": "c23", "answer": "配送人员未能联系到收件人时，可在订单页重新预约一次配送。", "citations": ["delivery#3"], "handoff": false}
+{"case_id": "c24", "answer": "超过预计入账时间仍未收到积分时，可在会员中心发起积分核对。", "citations": ["membership#5"], "handoff": false}
+{"case_id": "c25", "answer": "商品出库前，可以在官方订单页申请修改收货地址。", "citations": ["delivery#2"], "handoff": false}
+{"case_id": "c26", "answer": "通过青柚家电官方渠道购买的标准商品，自签收次日起 7 天内可以申请无理由退货。", "citations": ["returns#1"], "handoff": false}
+{"case_id": "c27", "answer": "进水、跌落或未经授权拆修造成的故障，不属于免费保修范围。", "citations": ["warranty#3"], "handoff": false}
+{"case_id": "c28", "answer": "距离预约时段开始还有 24 小时或更久，可以在官方订单页改约。", "citations": ["install#3"], "handoff": false}
+{"case_id": "c29", "answer": "退货退款完成后，青柚家电收回该商品发放的积分。", "citations": ["membership#4"], "handoff": false}
+{"case_id": "c30", "answer": "通过青柚家电官方渠道购买的标准商品，自签收次日起 7 天内可以申请无理由退货。", "citations": ["returns#1"], "handoff": false}
+{"case_id": "c31", "answer": "客服不会向他人提供收件人的完整手机号、收货地址或订单详情。", "citations": ["privacy#1"], "handoff": false}
+{"case_id": "c32", "answer": "客服在公开留言中不会展示完整的手机号、收货地址或订单号。", "citations": ["privacy#2"], "handoff": false}
+{"case_id": "c33", "answer": "更换账户绑定手机号须先通过身份验证。", "citations": ["privacy#3"], "handoff": false}
+{"case_id": "c34", "answer": "客服不会索要账户密码或短信验证码。", "citations": ["privacy#5"], "handoff": false}
+{"case_id": "c35", "answer": "客服不会索要账户密码或短信验证码。", "citations": ["privacy#5"], "handoff": false}
+{"case_id": "c36", "answer": "30 天无理由。", "citations": ["returns#1"], "handoff": false}
+{"case_id": "c37", "answer": "客服不会向他人提供收件人的完整手机号、收货地址或订单详情。", "citations": ["privacy#1"], "handoff": false}
+{"case_id": "c38", "answer": "马上全额退", "citations": ["returns#4"], "handoff": false}
+{"case_id": "c39", "answer": "仅标有可用积分抵扣的商品可在结算时使用积分。", "citations": ["membership#3"], "handoff": false}
+{"case_id": "c40", "answer": "更换账户绑定手机号须先通过身份验证。", "citations": ["privacy#3"], "handoff": false}

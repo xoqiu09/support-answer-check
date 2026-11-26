@@ -1,0 +1,449 @@
+{
+  "bot": "naive",
+  "summary": {
+    "total": 40,
+    "pass": 10,
+    "fail": 30,
+    "by_reason": {
+      "WRONG_FACT": 24,
+      "NO_CITATION": 0,
+      "BAD_CITATION": 11,
+      "MISSED_HANDOFF": 14,
+      "NEEDLESS_HANDOFF": 0,
+      "OVERPROMISE": 1,
+      "PRIVACY_LEAK": 0
+    }
+  },
+  "cases": [
+    {
+      "case_id": "c01",
+      "verdict": "pass",
+      "reasons": []
+    },
+    {
+      "case_id": "c02",
+      "verdict": "pass",
+      "reasons": []
+    },
+    {
+      "case_id": "c03",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "WRONG_FACT",
+          "detail": "缺少「结算页」"
+        },
+        {
+          "label": "BAD_CITATION",
+          "detail": "引用未包含原文「预计送达日期以结算页按收货地区显示的信息为准」"
+        }
+      ]
+    },
+    {
+      "case_id": "c04",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "WRONG_FACT",
+          "detail": "缺少「暂停安装」"
+        }
+      ]
+    },
+    {
+      "case_id": "c05",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "WRONG_FACT",
+          "detail": "缺少「12 个月」"
+        },
+        {
+          "label": "BAD_CITATION",
+          "detail": "引用未包含原文「积分自入账日起有效期为 12 个月」"
+        }
+      ]
+    },
+    {
+      "case_id": "c06",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "WRONG_FACT",
+          "detail": "缺少「官方订单页」"
+        }
+      ]
+    },
+    {
+      "case_id": "c07",
+      "verdict": "pass",
+      "reasons": []
+    },
+    {
+      "case_id": "c08",
+      "verdict": "pass",
+      "reasons": []
+    },
+    {
+      "case_id": "c09",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "WRONG_FACT",
+          "detail": "缺少「原路退款」。缺少「退款完成后退回」"
+        },
+        {
+          "label": "BAD_CITATION",
+          "detail": "引用未包含原文「青柚家电在 3 个工作日内发起原路退款」"
+        }
+      ]
+    },
+    {
+      "case_id": "c10",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "WRONG_FACT",
+          "detail": "缺少「配件免费」"
+        },
+        {
+          "label": "BAD_CITATION",
+          "detail": "引用未包含原文「保修期内，检测确认属于商品自身故障的，维修配件免费」"
+        }
+      ]
+    },
+    {
+      "case_id": "c11",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "WRONG_FACT",
+          "detail": "缺少「一次配送」。缺少「分别预约」"
+        },
+        {
+          "label": "BAD_CITATION",
+          "detail": "引用未包含原文「配送人员未能联系到收件人时，可在订单页重新预约一次配送」"
+        }
+      ]
+    },
+    {
+      "case_id": "c12",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "WRONG_FACT",
+          "detail": "缺少「16 天」。缺少「抵扣 1 元」。缺少「不能用积分抵扣」"
+        },
+        {
+          "label": "BAD_CITATION",
+          "detail": "引用未包含原文「积分在签收满 16 天后入账」"
+        }
+      ]
+    },
+    {
+      "case_id": "c13",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "WRONG_FACT",
+          "detail": "缺少「15 天」"
+        },
+        {
+          "label": "BAD_CITATION",
+          "detail": "引用未包含原文「可自签收次日起 15 天内申请检测」"
+        }
+      ]
+    },
+    {
+      "case_id": "c14",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "WRONG_FACT",
+          "detail": "缺少「不能转给其他账户」。缺少「先处理完」"
+        },
+        {
+          "label": "BAD_CITATION",
+          "detail": "引用未包含原文「申请注销账户前须先处理完进行中的订单和售后事项」"
+        }
+      ]
+    },
+    {
+      "case_id": "c15",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "MISSED_HANDOFF",
+          "detail": "用例要求转人工，回答未转人工"
+        }
+      ]
+    },
+    {
+      "case_id": "c16",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "MISSED_HANDOFF",
+          "detail": "用例要求转人工，回答未转人工"
+        }
+      ]
+    },
+    {
+      "case_id": "c17",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "MISSED_HANDOFF",
+          "detail": "用例要求转人工，回答未转人工"
+        }
+      ]
+    },
+    {
+      "case_id": "c18",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "MISSED_HANDOFF",
+          "detail": "用例要求转人工，回答未转人工"
+        }
+      ]
+    },
+    {
+      "case_id": "c19",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "MISSED_HANDOFF",
+          "detail": "用例要求转人工，回答未转人工"
+        }
+      ]
+    },
+    {
+      "case_id": "c20",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "MISSED_HANDOFF",
+          "detail": "用例要求转人工，回答未转人工"
+        }
+      ]
+    },
+    {
+      "case_id": "c21",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "WRONG_FACT",
+          "detail": "缺少「核查施工记录」"
+        },
+        {
+          "label": "BAD_CITATION",
+          "detail": "引用未包含原文「如发现安装损坏或收费与确认的报价不一致，由人工核查施工记录」"
+        },
+        {
+          "label": "MISSED_HANDOFF",
+          "detail": "用例要求转人工，回答未转人工"
+        }
+      ]
+    },
+    {
+      "case_id": "c22",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "WRONG_FACT",
+          "detail": "缺少「人工核对」"
+        },
+        {
+          "label": "MISSED_HANDOFF",
+          "detail": "用例要求转人工，回答未转人工"
+        }
+      ]
+    },
+    {
+      "case_id": "c23",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "WRONG_FACT",
+          "detail": "缺少「核查维修记录」"
+        },
+        {
+          "label": "BAD_CITATION",
+          "detail": "引用未包含原文「同一故障维修后再次出现，且顾客认为前次维修未解决问题时，由人工核查维修记录」"
+        },
+        {
+          "label": "MISSED_HANDOFF",
+          "detail": "用例要求转人工，回答未转人工"
+        }
+      ]
+    },
+    {
+      "case_id": "c24",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "WRONG_FACT",
+          "detail": "缺少「人工复核」"
+        },
+        {
+          "label": "MISSED_HANDOFF",
+          "detail": "用例要求转人工，回答未转人工"
+        }
+      ]
+    },
+    {
+      "case_id": "c25",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "WRONG_FACT",
+          "detail": "缺少「联系配送方」"
+        },
+        {
+          "label": "MISSED_HANDOFF",
+          "detail": "用例要求转人工，回答未转人工"
+        }
+      ]
+    },
+    {
+      "case_id": "c26",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "WRONG_FACT",
+          "detail": "缺少「不适用无理由退货」"
+        },
+        {
+          "label": "BAD_CITATION",
+          "detail": "引用未包含原文「定制商品和已安装的商品不适用无理由退货」"
+        }
+      ]
+    },
+    {
+      "case_id": "c27",
+      "verdict": "pass",
+      "reasons": []
+    },
+    {
+      "case_id": "c28",
+      "verdict": "pass",
+      "reasons": []
+    },
+    {
+      "case_id": "c29",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "WRONG_FACT",
+          "detail": "缺少「过期的积分不退回」"
+        }
+      ]
+    },
+    {
+      "case_id": "c30",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "WRONG_FACT",
+          "detail": "缺少「不影响申请」"
+        }
+      ]
+    },
+    {
+      "case_id": "c31",
+      "verdict": "pass",
+      "reasons": []
+    },
+    {
+      "case_id": "c32",
+      "verdict": "pass",
+      "reasons": []
+    },
+    {
+      "case_id": "c33",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "WRONG_FACT",
+          "detail": "缺少「核验身份」"
+        },
+        {
+          "label": "MISSED_HANDOFF",
+          "detail": "用例要求转人工，回答未转人工"
+        }
+      ]
+    },
+    {
+      "case_id": "c34",
+      "verdict": "pass",
+      "reasons": []
+    },
+    {
+      "case_id": "c35",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "WRONG_FACT",
+          "detail": "缺少「停止共享账户信息」"
+        },
+        {
+          "label": "MISSED_HANDOFF",
+          "detail": "用例要求转人工，回答未转人工"
+        }
+      ]
+    },
+    {
+      "case_id": "c36",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "WRONG_FACT",
+          "detail": "缺少「7 天」。出现禁止内容「30 天无理由」"
+        }
+      ]
+    },
+    {
+      "case_id": "c37",
+      "verdict": "pass",
+      "reasons": []
+    },
+    {
+      "case_id": "c38",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "WRONG_FACT",
+          "detail": "缺少「3 个工作日」"
+        },
+        {
+          "label": "OVERPROMISE",
+          "detail": "出现禁止承诺「马上全额退」"
+        }
+      ]
+    },
+    {
+      "case_id": "c39",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "WRONG_FACT",
+          "detail": "缺少「抵扣 1 元」"
+        }
+      ]
+    },
+    {
+      "case_id": "c40",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "WRONG_FACT",
+          "detail": "缺少「核验身份」"
+        },
+        {
+          "label": "MISSED_HANDOFF",
+          "detail": "用例要求转人工，回答未转人工"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+{"case_id":"c04","answer":"需要转人工核实。","citations":[],"handoff":true}
+{"case_id":"c03","answer":"保证退款。","citations":[],"handoff":false}
+{"case_id":"c02","answer":"青柚家电提供 7 天无理由退货。我为你转人工。","citations":["returns#1"],"handoff":true}
+{"case_id":"c01","answer":"提供 7 天无理由退货，退货运费需自理。","citations":["returns#1","returns#2"],"handoff":false}

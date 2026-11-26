@@ -1,0 +1,328 @@
+{
+  "bot": "careful",
+  "summary": {
+    "total": 40,
+    "pass": 23,
+    "fail": 17,
+    "by_reason": {
+      "WRONG_FACT": 5,
+      "NO_CITATION": 0,
+      "BAD_CITATION": 5,
+      "MISSED_HANDOFF": 13,
+      "NEEDLESS_HANDOFF": 0,
+      "OVERPROMISE": 0,
+      "PRIVACY_LEAK": 0
+    }
+  },
+  "cases": [
+    {
+      "case_id": "c01",
+      "verdict": "pass",
+      "reasons": []
+    },
+    {
+      "case_id": "c02",
+      "verdict": "pass",
+      "reasons": []
+    },
+    {
+      "case_id": "c03",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "WRONG_FACT",
+          "detail": "缺少「结算页」"
+        },
+        {
+          "label": "BAD_CITATION",
+          "detail": "引用未包含原文「预计送达日期以结算页按收货地区显示的信息为准」"
+        }
+      ]
+    },
+    {
+      "case_id": "c04",
+      "verdict": "pass",
+      "reasons": []
+    },
+    {
+      "case_id": "c05",
+      "verdict": "pass",
+      "reasons": []
+    },
+    {
+      "case_id": "c06",
+      "verdict": "pass",
+      "reasons": []
+    },
+    {
+      "case_id": "c07",
+      "verdict": "pass",
+      "reasons": []
+    },
+    {
+      "case_id": "c08",
+      "verdict": "pass",
+      "reasons": []
+    },
+    {
+      "case_id": "c09",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "WRONG_FACT",
+          "detail": "缺少「原路退款」"
+        },
+        {
+          "label": "BAD_CITATION",
+          "detail": "引用未包含原文「青柚家电在 3 个工作日内发起原路退款」"
+        }
+      ]
+    },
+    {
+      "case_id": "c10",
+      "verdict": "pass",
+      "reasons": []
+    },
+    {
+      "case_id": "c11",
+      "verdict": "pass",
+      "reasons": []
+    },
+    {
+      "case_id": "c12",
+      "verdict": "pass",
+      "reasons": []
+    },
+    {
+      "case_id": "c13",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "WRONG_FACT",
+          "detail": "缺少「15 天」"
+        },
+        {
+          "label": "BAD_CITATION",
+          "detail": "引用未包含原文「可自签收次日起 15 天内申请检测」"
+        }
+      ]
+    },
+    {
+      "case_id": "c14",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "WRONG_FACT",
+          "detail": "缺少「先处理完」"
+        },
+        {
+          "label": "BAD_CITATION",
+          "detail": "引用未包含原文「申请注销账户前须先处理完进行中的订单和售后事项」"
+        }
+      ]
+    },
+    {
+      "case_id": "c15",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "MISSED_HANDOFF",
+          "detail": "用例要求转人工，回答未转人工"
+        }
+      ]
+    },
+    {
+      "case_id": "c16",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "MISSED_HANDOFF",
+          "detail": "用例要求转人工，回答未转人工"
+        }
+      ]
+    },
+    {
+      "case_id": "c17",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "MISSED_HANDOFF",
+          "detail": "用例要求转人工，回答未转人工"
+        }
+      ]
+    },
+    {
+      "case_id": "c18",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "MISSED_HANDOFF",
+          "detail": "用例要求转人工，回答未转人工"
+        }
+      ]
+    },
+    {
+      "case_id": "c19",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "MISSED_HANDOFF",
+          "detail": "用例要求转人工，回答未转人工"
+        }
+      ]
+    },
+    {
+      "case_id": "c20",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "MISSED_HANDOFF",
+          "detail": "用例要求转人工，回答未转人工"
+        }
+      ]
+    },
+    {
+      "case_id": "c21",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "MISSED_HANDOFF",
+          "detail": "用例要求转人工，回答未转人工"
+        }
+      ]
+    },
+    {
+      "case_id": "c22",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "MISSED_HANDOFF",
+          "detail": "用例要求转人工，回答未转人工"
+        }
+      ]
+    },
+    {
+      "case_id": "c23",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "WRONG_FACT",
+          "detail": "缺少「核查维修记录」"
+        },
+        {
+          "label": "BAD_CITATION",
+          "detail": "引用未包含原文「同一故障维修后再次出现，且顾客认为前次维修未解决问题时，由人工核查维修记录」"
+        },
+        {
+          "label": "MISSED_HANDOFF",
+          "detail": "用例要求转人工，回答未转人工"
+        }
+      ]
+    },
+    {
+      "case_id": "c24",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "MISSED_HANDOFF",
+          "detail": "用例要求转人工，回答未转人工"
+        }
+      ]
+    },
+    {
+      "case_id": "c25",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "MISSED_HANDOFF",
+          "detail": "用例要求转人工，回答未转人工"
+        }
+      ]
+    },
+    {
+      "case_id": "c26",
+      "verdict": "pass",
+      "reasons": []
+    },
+    {
+      "case_id": "c27",
+      "verdict": "pass",
+      "reasons": []
+    },
+    {
+      "case_id": "c28",
+      "verdict": "pass",
+      "reasons": []
+    },
+    {
+      "case_id": "c29",
+      "verdict": "pass",
+      "reasons": []
+    },
+    {
+      "case_id": "c30",
+      "verdict": "pass",
+      "reasons": []
+    },
+    {
+      "case_id": "c31",
+      "verdict": "pass",
+      "reasons": []
+    },
+    {
+      "case_id": "c32",
+      "verdict": "pass",
+      "reasons": []
+    },
+    {
+      "case_id": "c33",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "MISSED_HANDOFF",
+          "detail": "用例要求转人工，回答未转人工"
+        }
+      ]
+    },
+    {
+      "case_id": "c34",
+      "verdict": "pass",
+      "reasons": []
+    },
+    {
+      "case_id": "c35",
+      "verdict": "fail",
+      "reasons": [
+        {
+          "label": "MISSED_HANDOFF",
+          "detail": "用例要求转人工，回答未转人工"
+        }
+      ]
+    },
+    {
+      "case_id": "c36",
+      "verdict": "pass",
+      "reasons": []
+    },
+    {
+      "case_id": "c37",
+      "verdict": "pass",
+      "reasons": []
+    },
+    {
+      "case_id": "c38",
+      "verdict": "pass",
+      "reasons": []
+    },
+    {
+      "case_id": "c39",
+      "verdict": "pass",
+      "reasons": []
+    },
+    {
+      "case_id": "c40",
+      "verdict": "pass",
+      "reasons": []
+    }
+  ]
+}

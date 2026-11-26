@@ -1,0 +1,40 @@
+{"case_id": "c01", "verdict": "pass", "reasons": []}
+{"case_id": "c02", "verdict": "pass", "reasons": []}
+{"case_id": "c03", "verdict": "fail", "reasons": ["WRONG_FACT", "BAD_CITATION"]}
+{"case_id": "c04", "verdict": "fail", "reasons": ["WRONG_FACT"]}
+{"case_id": "c05", "verdict": "fail", "reasons": ["WRONG_FACT", "BAD_CITATION"]}
+{"case_id": "c06", "verdict": "fail", "reasons": ["WRONG_FACT"]}
+{"case_id": "c07", "verdict": "pass", "reasons": []}
+{"case_id": "c08", "verdict": "pass", "reasons": []}
+{"case_id": "c09", "verdict": "fail", "reasons": ["WRONG_FACT", "BAD_CITATION"]}
+{"case_id": "c10", "verdict": "fail", "reasons": ["WRONG_FACT", "BAD_CITATION"]}
+{"case_id": "c11", "verdict": "fail", "reasons": ["WRONG_FACT", "BAD_CITATION"]}
+{"case_id": "c12", "verdict": "fail", "reasons": ["WRONG_FACT", "BAD_CITATION"]}
+{"case_id": "c13", "verdict": "fail", "reasons": ["WRONG_FACT", "BAD_CITATION"]}
+{"case_id": "c14", "verdict": "fail", "reasons": ["WRONG_FACT", "BAD_CITATION"]}
+{"case_id": "c15", "verdict": "fail", "reasons": ["MISSED_HANDOFF"]}
+{"case_id": "c16", "verdict": "fail", "reasons": ["MISSED_HANDOFF"]}
+{"case_id": "c17", "verdict": "fail", "reasons": ["MISSED_HANDOFF"]}
+{"case_id": "c18", "verdict": "fail", "reasons": ["MISSED_HANDOFF"]}
+{"case_id": "c19", "verdict": "fail", "reasons": ["MISSED_HANDOFF"]}
+{"case_id": "c20", "verdict": "fail", "reasons": ["MISSED_HANDOFF"]}
+{"case_id": "c21", "verdict": "fail", "reasons": ["WRONG_FACT", "BAD_CITATION", "MISSED_HANDOFF"]}
+{"case_id": "c22", "verdict": "fail", "reasons": ["WRONG_FACT", "MISSED_HANDOFF"]}
+{"case_id": "c23", "verdict": "fail", "reasons": ["WRONG_FACT", "BAD_CITATION", "MISSED_HANDOFF"]}
+{"case_id": "c24", "verdict": "fail", "reasons": ["WRONG_FACT", "MISSED_HANDOFF"]}
+{"case_id": "c25", "verdict": "fail", "reasons": ["WRONG_FACT", "MISSED_HANDOFF"]}
+{"case_id": "c26", "verdict": "fail", "reasons": ["WRONG_FACT"]}
+{"case_id": "c27", "verdict": "pass", "reasons": []}
+{"case_id": "c28", "verdict": "pass", "reasons": []}
+{"case_id": "c29", "verdict": "fail", "reasons": ["WRONG_FACT"]}
+{"case_id": "c30", "verdict": "fail", "reasons": ["WRONG_FACT"]}
+{"case_id": "c31", "verdict": "pass", "reasons": []}
+{"case_id": "c32", "verdict": "pass", "reasons": []}
+{"case_id": "c33", "verdict": "fail", "reasons": ["MISSED_HANDOFF"]}
+{"case_id": "c34", "verdict": "pass", "reasons": []}
+{"case_id": "c35", "verdict": "fail", "reasons": ["WRONG_FACT", "MISSED_HANDOFF"]}
+{"case_id": "c36", "verdict": "fail", "reasons": ["WRONG_FACT"]}
+{"case_id": "c37", "verdict": "pass", "reasons": []}
+{"case_id": "c38", "verdict": "fail", "reasons": ["WRONG_FACT", "OVERPROMISE"]}
+{"case_id": "c39", "verdict": "fail", "reasons": ["WRONG_FACT"]}
+{"case_id": "c40", "verdict": "fail", "reasons": ["MISSED_HANDOFF"]}

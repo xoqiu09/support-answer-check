@@ -1,0 +1,94 @@
+"""Summarize checks, compare revisions, and measure label agreement."""
+
+from .checks import REASON_LABELS, check_answer
+
+
+def build_report(bot, cases, answers, passages, policy):
+    answers_by_id = {answer["case_id"]: answer for answer in answers}
+    by_reason = dict.fromkeys(REASON_LABELS, 0)
+    verdicts = []
+    failures = 0
+    for case in cases:
+        case_id = case["id"]
+        reasons = check_answer(case, answers_by_id[case_id], passages, policy)
+        verdict = "fail" if reasons else "pass"
+        failures += bool(reasons)
+        for reason in reasons:
+            by_reason[reason["label"]] += 1
+        verdicts.append({"case_id": case_id, "verdict": verdict, "reasons": reasons})
+    return {
+        "bot": bot,
+        "summary": {
+            "total": len(verdicts),
+            "pass": len(verdicts) - failures,
+            "fail": failures,
+            "by_reason": by_reason,
+        },
+        "cases": verdicts,
+    }
+
+
+def _ratio(numerator, denominator):
+    return round(numerator / denominator, 3) if denominator else None
+
+
+def agreement(report, labels):
+    labels_by_id = {row["case_id"]: row for row in labels}
+    confusion = dict.fromkeys(("both_fail", "checker_only_fail", "labels_only_fail", "both_pass"), 0)
+    confusion_keys = {
+        ("fail", "fail"): "both_fail",
+        ("fail", "pass"): "checker_only_fail",
+        ("pass", "fail"): "labels_only_fail",
+        ("pass", "pass"): "both_pass",
+    }
+    per_reason = {label: {"both": 0, "checker_only": 0, "labels_only": 0}
+                  for label in REASON_LABELS}
+    disagreements = []
+    for checker in report["cases"]:
+        case_id = checker["case_id"]
+        label = labels_by_id[case_id]
+        checker_verdict = checker["verdict"]
+        labels_verdict = label["verdict"]
+        confusion[confusion_keys[checker_verdict, labels_verdict]] += 1
+
+        checker_reasons = [reason["label"] for reason in checker["reasons"]]
+        labels_reasons = label["reasons"]
+        checker_set, labels_set = set(checker_reasons), set(labels_reasons)
+        for reason in checker_set & labels_set:
+            per_reason[reason]["both"] += 1
+        for reason in checker_set - labels_set:
+            per_reason[reason]["checker_only"] += 1
+        for reason in labels_set - checker_set:
+            per_reason[reason]["labels_only"] += 1
+
+        if checker_verdict != labels_verdict:
+            disagreements.append({
+                "case_id": case_id,
+                "checker_verdict": checker_verdict,
+                "labels_verdict": labels_verdict,
+                "checker_reasons": checker_reasons,
+                "labels_reasons": labels_reasons,
+            })
+
+    both_fail = confusion["both_fail"]
+    return {
+        "confusion": confusion,
+        "precision": _ratio(both_fail, both_fail + confusion["checker_only_fail"]),
+        "recall": _ratio(both_fail, both_fail + confusion["labels_only_fail"]),
+        "per_reason": per_reason,
+        "disagreements": disagreements,
+    }
+
+
+def compare_reports(base, new):
+    new_verdicts = {case["case_id"]: case["verdict"] for case in new["cases"]}
+    regressions = []
+    fixes = []
+    for case in base["cases"]:
+        case_id = case["case_id"]
+        transition = case["verdict"], new_verdicts.get(case_id)
+        if transition == ("pass", "fail"):
+            regressions.append(case_id)
+        elif transition == ("fail", "pass"):
+            fixes.append(case_id)
+    return regressions, fixes
