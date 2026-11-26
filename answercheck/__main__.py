@@ -7,7 +7,7 @@ from pathlib import Path
 
 from .bots import run_bot
 from .checks import validate_data
-from .kb import load_kb
+from .kb import load_kb, load_synonyms
 from .report import agreement, build_report, compare_reports
 
 
@@ -52,7 +52,8 @@ def _check(args):
     answers = _read_jsonl(args.answers)
     policy = _read_json(args.policy)
     bot = args.answers.name.removesuffix(".jsonl")
-    _write_json(build_report(bot, cases, answers, passages, policy), args.out)
+    synonyms = load_synonyms(args.kb)
+    _write_json(build_report(bot, cases, answers, passages, policy, synonyms), args.out)
     return 0
 
 

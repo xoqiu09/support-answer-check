@@ -1,0 +1,12 @@
+{"case_id":"h01","answer":"遥控器的保修从整机签收当天起算，期限是６　个月。","citations":["warranty#1"],"handoff":false}
+{"case_id":"h02","answer":"以退件验收通过为起点，退款会在３个工作日内发起，到账时间由支付渠道处理。","citations":["returns#4"],"handoff":false}
+{"case_id":"h03","answer":"可用积分抵扣的商品，每１００积分抵扣１块钱。运费和安装费不能用积分抵扣。","citations":["membership#3"],"handoff":false}
+{"case_id":"h04","answer":"离预约时段开始还有２４小时或更久时，可以在官方订单页改约。时间更短要由人工协调。","citations":["install#3"],"handoff":false}
+{"case_id":"h05","answer":"每笔积分到期后会自动作废，你可以在会员中心查看到期日。","citations":["membership#2"],"handoff":false}
+{"case_id":"h06","answer":"订单和售后处理完之后，在账户设置提交注销申请时还需要做身份验证。","citations":["privacy#4"],"handoff":false}
+{"case_id":"h07","answer":"遥控器的期限单独算，从整机签收日起保修十六个月。","citations":["warranty#1"],"handoff":false}
+{"case_id":"h08","answer":"退款会在验收通过后的３天内发起，周末和法定节假日也算在内。","citations":["returns#4"],"handoff":false}
+{"case_id":"h09","answer":"标有可赚积分的商品，每实付二十一块钱获得一积分，不足二十一块钱的部分不计。","citations":["membership#1"],"handoff":false}
+{"case_id":"h10","answer":"要在官方订单页改约，离预约开始必须还有２４日或更久。","citations":["install#3"],"handoff":false}
+{"case_id":"h11","answer":"到期的积分不会自动失效，结算时仍然能抵扣。","citations":["membership#2"],"handoff":false}
+{"case_id":"h12","answer":"只要确认新手机号能接到验证码，就能完成换绑，账户本人不用另外确认。","citations":["privacy#3"],"handoff":false}

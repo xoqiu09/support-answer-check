@@ -11,6 +11,7 @@ KB = FIXTURES / "kb"
 CASES = FIXTURES / "cases.jsonl"
 ANSWERS = FIXTURES / "answers.jsonl"
 POLICY = FIXTURES / "policy.json"
+DATA = Path(__file__).resolve().parents[1] / "data"
 LABELS = [
     "WRONG_FACT", "NO_CITATION", "BAD_CITATION", "MISSED_HANDOFF",
     "NEEDLESS_HANDOFF", "OVERPROMISE", "PRIVACY_LEAK",
@@ -142,6 +143,48 @@ class CliTests(unittest.TestCase):
         reasons = report["cases"][2]["reasons"]
         self.assertEqual([reason["label"] for reason in reasons], ["NEEDLESS_HANDOFF", "OVERPROMISE"])
         self.assertIn("保证退款", reasons[1]["detail"])
+
+    def test_check_heldout_answers_match_frozen_verdicts_and_reasons(self):
+        heldout = DATA / "heldout"
+        labels = read_jsonl(heldout / "labels.jsonl")
+        for bot in ("naive", "careful"):
+            out = self.temp / f"{bot}.json"
+            result = self.cli(
+                "check", "--kb", DATA / "kb", "--cases", heldout / "cases.jsonl",
+                "--policy", DATA / "policy.json", "--answers", heldout / "answers" / f"{bot}.jsonl",
+                "--out", out,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            cases = json.loads(out.read_text(encoding="utf-8"))["cases"]
+            self.assertEqual([row["case_id"] for row in cases], [row["case_id"] for row in labels])
+            for actual, expected in zip(cases, labels):
+                with self.subTest(bot=bot, case_id=expected["case_id"]):
+                    self.assertEqual(actual["verdict"], expected["verdict"])
+                    self.assertEqual([reason["label"] for reason in actual["reasons"]], expected["reasons"])
+
+    def test_check_requires_affirmative_identity_verification_for_phone_change(self):
+        case = next(row for row in read_jsonl(DATA / "heldout" / "cases.jsonl") if row["id"] == "h12")
+        cases = self.write_rows("cases.jsonl", [case])
+        out = self.temp / "check.json"
+        for wording, verdict, reasons in (
+            ("需要核验身份", "pass", []),
+            ("无需核验身份", "fail", ["WRONG_FACT"]),
+            ("无需通过身份验证", "fail", ["WRONG_FACT"]),
+            ("身份验证可以跳过", "fail", ["WRONG_FACT"]),
+        ):
+            with self.subTest(wording=wording):
+                answers = self.write_rows("answers.jsonl", [{
+                    "case_id": case["id"], "answer": f"换绑手机号，{wording}。",
+                    "citations": ["privacy#3"], "handoff": False,
+                }])
+                result = self.cli(
+                    "check", "--kb", DATA / "kb", "--cases", cases,
+                    "--policy", DATA / "policy.json", "--answers", answers, "--out", out,
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                checked = json.loads(out.read_text(encoding="utf-8"))["cases"][0]
+                self.assertEqual(checked["verdict"], verdict)
+                self.assertEqual([reason["label"] for reason in checked["reasons"]], reasons)
 
     def test_agree_confusion_rates_reasons_and_disagreements(self):
         cases = [

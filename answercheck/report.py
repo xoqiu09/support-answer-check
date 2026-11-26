@@ -3,14 +3,14 @@
 from .checks import REASON_LABELS, check_answer
 
 
-def build_report(bot, cases, answers, passages, policy):
+def build_report(bot, cases, answers, passages, policy, synonyms=None):
     answers_by_id = {answer["case_id"]: answer for answer in answers}
     by_reason = dict.fromkeys(REASON_LABELS, 0)
     verdicts = []
     failures = 0
     for case in cases:
         case_id = case["id"]
-        reasons = check_answer(case, answers_by_id[case_id], passages, policy)
+        reasons = check_answer(case, answers_by_id[case_id], passages, policy, synonyms)
         verdict = "fail" if reasons else "pass"
         failures += bool(reasons)
         for reason in reasons:

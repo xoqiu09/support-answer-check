@@ -10,7 +10,7 @@
   "per_reason": {
     "WRONG_FACT": {
       "both": 22,
-      "checker_only": 2,
+      "checker_only": 0,
       "labels_only": 0
     },
     "NO_CITATION": {

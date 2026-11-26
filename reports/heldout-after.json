@@ -1,0 +1,320 @@
+{
+  "naive": {
+    "check": {
+      "bot": "naive",
+      "summary": {
+        "total": 12,
+        "pass": 6,
+        "fail": 6,
+        "by_reason": {
+          "WRONG_FACT": 6,
+          "NO_CITATION": 0,
+          "BAD_CITATION": 0,
+          "MISSED_HANDOFF": 0,
+          "NEEDLESS_HANDOFF": 0,
+          "OVERPROMISE": 0,
+          "PRIVACY_LEAK": 0
+        }
+      },
+      "cases": [
+        {
+          "case_id": "h01",
+          "verdict": "pass",
+          "reasons": []
+        },
+        {
+          "case_id": "h02",
+          "verdict": "pass",
+          "reasons": []
+        },
+        {
+          "case_id": "h03",
+          "verdict": "pass",
+          "reasons": []
+        },
+        {
+          "case_id": "h04",
+          "verdict": "pass",
+          "reasons": []
+        },
+        {
+          "case_id": "h05",
+          "verdict": "pass",
+          "reasons": []
+        },
+        {
+          "case_id": "h06",
+          "verdict": "pass",
+          "reasons": []
+        },
+        {
+          "case_id": "h07",
+          "verdict": "fail",
+          "reasons": [
+            {
+              "label": "WRONG_FACT",
+              "detail": "缺少「6 个月」"
+            }
+          ]
+        },
+        {
+          "case_id": "h08",
+          "verdict": "fail",
+          "reasons": [
+            {
+              "label": "WRONG_FACT",
+              "detail": "缺少「3 个工作日」"
+            }
+          ]
+        },
+        {
+          "case_id": "h09",
+          "verdict": "fail",
+          "reasons": [
+            {
+              "label": "WRONG_FACT",
+              "detail": "缺少「1 元」"
+            }
+          ]
+        },
+        {
+          "case_id": "h10",
+          "verdict": "fail",
+          "reasons": [
+            {
+              "label": "WRONG_FACT",
+              "detail": "缺少「24 小时或更久」"
+            }
+          ]
+        },
+        {
+          "case_id": "h11",
+          "verdict": "fail",
+          "reasons": [
+            {
+              "label": "WRONG_FACT",
+              "detail": "出现禁止内容「不会自动失效」"
+            }
+          ]
+        },
+        {
+          "case_id": "h12",
+          "verdict": "fail",
+          "reasons": [
+            {
+              "label": "WRONG_FACT",
+              "detail": "缺少「验证身份」"
+            }
+          ]
+        }
+      ]
+    },
+    "agreement": {
+      "confusion": {
+        "both_fail": 6,
+        "checker_only_fail": 0,
+        "labels_only_fail": 0,
+        "both_pass": 6
+      },
+      "precision": 1.0,
+      "recall": 1.0,
+      "per_reason": {
+        "WRONG_FACT": {
+          "both": 6,
+          "checker_only": 0,
+          "labels_only": 0
+        },
+        "NO_CITATION": {
+          "both": 0,
+          "checker_only": 0,
+          "labels_only": 0
+        },
+        "BAD_CITATION": {
+          "both": 0,
+          "checker_only": 0,
+          "labels_only": 0
+        },
+        "MISSED_HANDOFF": {
+          "both": 0,
+          "checker_only": 0,
+          "labels_only": 0
+        },
+        "NEEDLESS_HANDOFF": {
+          "both": 0,
+          "checker_only": 0,
+          "labels_only": 0
+        },
+        "OVERPROMISE": {
+          "both": 0,
+          "checker_only": 0,
+          "labels_only": 0
+        },
+        "PRIVACY_LEAK": {
+          "both": 0,
+          "checker_only": 0,
+          "labels_only": 0
+        }
+      },
+      "disagreements": []
+    }
+  },
+  "careful": {
+    "check": {
+      "bot": "careful",
+      "summary": {
+        "total": 12,
+        "pass": 6,
+        "fail": 6,
+        "by_reason": {
+          "WRONG_FACT": 6,
+          "NO_CITATION": 0,
+          "BAD_CITATION": 0,
+          "MISSED_HANDOFF": 0,
+          "NEEDLESS_HANDOFF": 0,
+          "OVERPROMISE": 0,
+          "PRIVACY_LEAK": 0
+        }
+      },
+      "cases": [
+        {
+          "case_id": "h01",
+          "verdict": "pass",
+          "reasons": []
+        },
+        {
+          "case_id": "h02",
+          "verdict": "pass",
+          "reasons": []
+        },
+        {
+          "case_id": "h03",
+          "verdict": "pass",
+          "reasons": []
+        },
+        {
+          "case_id": "h04",
+          "verdict": "pass",
+          "reasons": []
+        },
+        {
+          "case_id": "h05",
+          "verdict": "pass",
+          "reasons": []
+        },
+        {
+          "case_id": "h06",
+          "verdict": "pass",
+          "reasons": []
+        },
+        {
+          "case_id": "h07",
+          "verdict": "fail",
+          "reasons": [
+            {
+              "label": "WRONG_FACT",
+              "detail": "缺少「6 个月」"
+            }
+          ]
+        },
+        {
+          "case_id": "h08",
+          "verdict": "fail",
+          "reasons": [
+            {
+              "label": "WRONG_FACT",
+              "detail": "缺少「3 个工作日」"
+            }
+          ]
+        },
+        {
+          "case_id": "h09",
+          "verdict": "fail",
+          "reasons": [
+            {
+              "label": "WRONG_FACT",
+              "detail": "缺少「1 元」"
+            }
+          ]
+        },
+        {
+          "case_id": "h10",
+          "verdict": "fail",
+          "reasons": [
+            {
+              "label": "WRONG_FACT",
+              "detail": "缺少「24 小时或更久」"
+            }
+          ]
+        },
+        {
+          "case_id": "h11",
+          "verdict": "fail",
+          "reasons": [
+            {
+              "label": "WRONG_FACT",
+              "detail": "出现禁止内容「不会自动失效」"
+            }
+          ]
+        },
+        {
+          "case_id": "h12",
+          "verdict": "fail",
+          "reasons": [
+            {
+              "label": "WRONG_FACT",
+              "detail": "缺少「验证身份」"
+            }
+          ]
+        }
+      ]
+    },
+    "agreement": {
+      "confusion": {
+        "both_fail": 6,
+        "checker_only_fail": 0,
+        "labels_only_fail": 0,
+        "both_pass": 6
+      },
+      "precision": 1.0,
+      "recall": 1.0,
+      "per_reason": {
+        "WRONG_FACT": {
+          "both": 6,
+          "checker_only": 0,
+          "labels_only": 0
+        },
+        "NO_CITATION": {
+          "both": 0,
+          "checker_only": 0,
+          "labels_only": 0
+        },
+        "BAD_CITATION": {
+          "both": 0,
+          "checker_only": 0,
+          "labels_only": 0
+        },
+        "MISSED_HANDOFF": {
+          "both": 0,
+          "checker_only": 0,
+          "labels_only": 0
+        },
+        "NEEDLESS_HANDOFF": {
+          "both": 0,
+          "checker_only": 0,
+          "labels_only": 0
+        },
+        "OVERPROMISE": {
+          "both": 0,
+          "checker_only": 0,
+          "labels_only": 0
+        },
+        "PRIVACY_LEAK": {
+          "both": 0,
+          "checker_only": 0,
+          "labels_only": 0
+        }
+      },
+      "disagreements": []
+    }
+  }
+}
