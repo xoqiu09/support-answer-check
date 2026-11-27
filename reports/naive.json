@@ -311,7 +311,7 @@
       "reasons": [
         {
           "label": "WRONG_FACT",
-          "detail": "缺少「不适用无理由退货」"
+          "detail": "缺少「已安装的商品不适用无理由退货」"
         },
         {
           "label": "BAD_CITATION",
