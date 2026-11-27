@@ -6,7 +6,7 @@ from .facts import contains_fact, normalize_fact_text
 
 
 # 必须出现的事实前后带明确否定（如「无需核验身份」）时，不算答出了这条事实。
-_NEGATION_BEFORE = r"(?:无[须需]|不(?:必|用|须|需要?)|可(?:以)?不|免于)\s*(?:(?:先|再|进行|通过|做)\s*)*"
+_NEGATION_BEFORE = r"(?:无[须需]|不(?:必|用|须|需要?|会)|可(?:以)?不|免于)\s*(?:(?:先|再|进行|通过|做)\s*)*"
 _NEGATION_AFTER = r"\s*(?:不(?:是必需的|需要)|可(?:以)?(?:跳过|省略))"
 
 
@@ -31,6 +31,17 @@ def _add_reason(reasons, label, details):
         reasons.append({"label": label, "detail": "。".join(details)})
 
 
+def index_answers(answers):
+    answers_by_id = {}
+    errors = []
+    for answer in answers:
+        case_id = answer["case_id"]
+        if case_id in answers_by_id:
+            errors.append(f"用例 {case_id} 回答重复")
+        answers_by_id[case_id] = answer
+    return answers_by_id, errors
+
+
 def validate_data(passages, cases, answers=None):
     """Return errors in case data and, when provided, answer references."""
     errors = []
@@ -49,16 +60,17 @@ def validate_data(passages, cases, answers=None):
                 errors.append(f"用例 {case_id} 的段落 {passage_id} 缺少原文「{evidence}」")
 
     if answers is not None:
-        answered = set()
+        answers = list(answers)
+        answers_by_id, duplicate_errors = index_answers(answers)
+        errors.extend(duplicate_errors)
         for answer in answers:
             case_id = answer["case_id"]
-            answered.add(case_id)
             if case_id not in case_ids:
                 errors.append(f"回答引用的用例 {case_id} 不存在")
             for passage_id in answer["citations"]:
                 if passage_id not in passages:
                     errors.append(f"用例 {case_id} 的回答引用了不存在的段落 {passage_id}")
-        for case_id in sorted(case_ids - answered):
+        for case_id in sorted(case_ids - answers_by_id.keys()):
             errors.append(f"用例 {case_id} 缺少回答")
     return errors
 

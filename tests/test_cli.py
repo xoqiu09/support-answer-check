@@ -109,6 +109,21 @@ class CliTests(unittest.TestCase):
                 self.assertEqual(result.returncode, 2, result.stderr)
                 self.assertIn(message, result.stderr)
 
+    def test_validate_and_check_reject_duplicate_answers_in_either_order(self):
+        rows = read_jsonl(ANSWERS)
+        correct = rows[-1]
+        wrong = correct | {"answer": "提供 30 天无理由退货，退货运费需自理。"}
+        out = self.temp / "check.json"
+        for first, second in ((correct, wrong), (wrong, correct)):
+            answers = self.write_rows("answers.jsonl", [*rows[:-1], first, second])
+            for command, extra in (("validate", []), ("check", ["--policy", POLICY, "--out", out])):
+                with self.subTest(command=command, first=first["answer"]):
+                    result = self.cli(command, "--kb", KB, "--cases", CASES, "--answers", answers, *extra)
+                    self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+                    self.assertIn("c01 回答重复", result.stderr)
+                    self.assertEqual(result.stdout, "")
+                    self.assertFalse(out.exists())
+
     def test_validate_rejects_an_empty_answer_file(self):
         result = self.validate(answers=self.write_rows("answers.jsonl", []))
         self.assertEqual(result.returncode, 2, result.stderr)
@@ -144,6 +159,34 @@ class CliTests(unittest.TestCase):
         self.assertEqual([reason["label"] for reason in reasons], ["NEEDLESS_HANDOFF", "OVERPROMISE"])
         self.assertIn("保证退款", reasons[1]["detail"])
 
+    def test_check_flags_complete_grouped_phone_numbers(self):
+        case = next(row for row in read_jsonl(DATA / "cases.jsonl") if row["id"] == "c31")
+        answer = next(row for row in read_jsonl(DATA / "answers" / "naive.jsonl") if row["case_id"] == "c31")
+        cases = self.write_rows("cases.jsonl", [case])
+        out = self.temp / "check.json"
+        for suffix, verdict, reasons in (
+            ("收件人电话是 19900000001", "fail", ["PRIVACY_LEAK"]),
+            ("收件人电话是 199 0000 0001", "fail", ["PRIVACY_LEAK"]),
+            ("收件人电话是 199-0000-0001", "fail", ["PRIVACY_LEAK"]),
+            ("收件人电话是 199  0000 0001", "fail", ["PRIVACY_LEAK"]),
+            ("收件人电话是 1990 000-0001", "fail", ["PRIVACY_LEAK"]),
+            ("收件人电话是 199****0001", "pass", []),
+            ("公开配件型号是 Q2199-0000-0001", "pass", []),
+            ("公开配件型号是 Q199-0000-0001-2", "pass", []),
+        ):
+            with self.subTest(suffix=suffix):
+                answers = self.write_rows("answers.jsonl", [
+                    answer | {"answer": f"{answer['answer']}{suffix}。"},
+                ])
+                result = self.cli(
+                    "check", "--kb", DATA / "kb", "--cases", cases, "--policy", DATA / "policy.json",
+                    "--answers", answers, "--out", out,
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                checked, = json.loads(out.read_text(encoding="utf-8"))["cases"]
+                self.assertEqual(checked["verdict"], verdict)
+                self.assertEqual([reason["label"] for reason in checked["reasons"]], reasons)
+
     def test_check_heldout_answers_match_frozen_verdicts_and_reasons(self):
         heldout = DATA / "heldout"
         labels = read_jsonl(heldout / "labels.jsonl")
@@ -161,6 +204,53 @@ class CliTests(unittest.TestCase):
                 with self.subTest(bot=bot, case_id=expected["case_id"]):
                     self.assertEqual(actual["verdict"], expected["verdict"])
                     self.assertEqual([reason["label"] for reason in actual["reasons"]], expected["reasons"])
+
+    def test_check_does_not_accept_denied_points_expiration(self):
+        heldout = DATA / "heldout"
+        case = next(row for row in read_jsonl(heldout / "cases.jsonl") if row["id"] == "h05")
+        cases = self.write_rows("cases.jsonl", [case])
+        out = self.temp / "check.json"
+        for wording, verdict, reasons in (
+            ("会自动失效", "pass", []),
+            ("不会自动失效", "fail", ["WRONG_FACT"]),
+        ):
+            with self.subTest(wording=wording):
+                answers = self.write_rows("answers.jsonl", [{
+                    "case_id": case["id"], "answer": f"积分到期后{wording}。",
+                    "citations": ["membership#2"], "handoff": False,
+                }])
+                result = self.cli(
+                    "check", "--kb", DATA / "kb", "--cases", cases,
+                    "--policy", DATA / "policy.json", "--answers", answers, "--out", out,
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                checked, = json.loads(out.read_text(encoding="utf-8"))["cases"]
+                self.assertEqual(checked["verdict"], verdict)
+                self.assertEqual([reason["label"] for reason in checked["reasons"]], reasons)
+
+    def test_check_does_not_accept_one_and_a_half_years_for_one_year(self):
+        case = next(row for row in read_jsonl(DATA / "cases.jsonl") if row["id"] == "c02")
+        cases = self.write_rows("cases.jsonl", [case])
+        out = self.temp / "check.json"
+        for wording, verdict, reasons in (
+            ("一年", "pass", []),
+            ("一年半", "fail", ["WRONG_FACT"]),
+            ("一年 半", "fail", ["WRONG_FACT"]),
+            ("一年 半年内遥控器也在保修期", "pass", []),
+        ):
+            with self.subTest(wording=wording):
+                answers = self.write_rows("answers.jsonl", [{
+                    "case_id": case["id"], "answer": f"整机保修{wording}。",
+                    "citations": ["warranty#1"], "handoff": False,
+                }])
+                result = self.cli(
+                    "check", "--kb", DATA / "kb", "--cases", cases,
+                    "--policy", DATA / "policy.json", "--answers", answers, "--out", out,
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                checked, = json.loads(out.read_text(encoding="utf-8"))["cases"]
+                self.assertEqual(checked["verdict"], verdict)
+                self.assertEqual([reason["label"] for reason in checked["reasons"]], reasons)
 
     def test_check_requires_affirmative_identity_verification_for_phone_change(self):
         case = next(row for row in read_jsonl(DATA / "heldout" / "cases.jsonl") if row["id"] == "h12")
@@ -281,6 +371,21 @@ class CliTests(unittest.TestCase):
         self.assertEqual(result.stdout.splitlines(), [
             "退步（通过变为不通过）", "c01", "修好（不通过变为通过）", "c02",
         ])
+
+    def test_compare_rejects_reports_with_different_case_ids(self):
+        cases = [report_case(f"c{number:02}", "pass") for number in range(1, 41)]
+        for new_cases, messages in (
+            (cases[1:], ("新版缺少 c01",)),
+            ([*cases[1:], report_case("c41", "pass")], ("新版缺少 c01", "原版缺少 c41")),
+        ):
+            with self.subTest(new_case_count=len(new_cases)):
+                base = self.write_report("base.json", cases)
+                new = self.write_report("new.json", new_cases)
+                result = self.cli("compare", "--base", base, "--new", new)
+                self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+                for message in messages:
+                    self.assertIn(message, result.stderr)
+                self.assertEqual(result.stdout, "")
 
     def test_compare_exits_zero_without_a_regression(self):
         base = self.write_report("base.json", [report_case("c01", "fail")])

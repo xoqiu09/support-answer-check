@@ -17,7 +17,7 @@
 /opt/homebrew/bin/python3 -m answercheck validate --kb data/kb --cases data/cases.jsonl --answers data/answers/careful.jsonl
 ```
 
-生成质检报告、一致性报告和回归报告。回归报告列出哪些题从通过变为不通过，以及哪些题从不通过变为通过。出现退步时，`compare` 的退出码为 1，否则为 0。
+生成质检报告、一致性报告和回归报告。回归报告列出哪些题从通过变为不通过，以及哪些题从不通过变为通过。两份报告的题号一致时，`compare` 无退步返回 0，有退步返回 1。题号不一致时返回 2，并列出缺少的题号。
 
 ```sh
 /opt/homebrew/bin/python3 -m answercheck check --kb data/kb --cases data/cases.jsonl --policy data/policy.json --answers data/answers/naive.jsonl --out reports/naive.json
