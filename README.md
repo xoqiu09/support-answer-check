@@ -6,7 +6,7 @@
 
 ## 怎么跑
 
-在仓库根目录运行。需要 Python 3.10 或更新版本，只用标准库，全程离线。下面使用 `/opt/homebrew/bin/python3`。如果你的 Python 装在别处，可以换成指向相应版本的 `python3`。
+在仓库根目录运行。需要 Python 3.10 或更新版本，只用标准库。下面的假客服示例和测试全程离线，使用 `/opt/homebrew/bin/python3`。如果你的 Python 装在别处，可以换成指向相应版本的 `python3`。
 
 先生成两个机器人的回答，再检查用例和回答数据。
 
@@ -32,6 +32,8 @@
 ```sh
 /opt/homebrew/bin/python3 -m unittest -v
 ```
+
+可以用 `--bot replay` 离线回放已有回答，也可以用 `--bot http` 调用配置好的模型服务。[模型接入与回放说明](docs/M2.md)
 
 ## 两个假客服的结果
 
@@ -61,10 +63,9 @@ Codex 根据知识库手写了 12 道新题和两套固定回答。两套回答�
 
 ## 还没做
 
-- 接入真实模型。
 - 判断词表之外的同义表达，以及不同表述的证据是否支持回答。
 - 做可操作的演示页面。
 
 ## English overview
 
-Support Answer Check is an offline Python tool for evaluating customer support answers. It checks required facts, citations, handoffs, unsupported promises, and privacy leaks. It compares two deterministic bots on 40 fictional cases and measures how its verdicts and reasons agree with independent AI annotations. Run it with Python 3.10 or newer and the standard library.
+Support Answer Check is a Python tool for evaluating customer support answers offline. It checks required facts, citations, handoffs, unsupported promises, and privacy leaks. It compares two deterministic bots on 40 fictional cases and measures how its verdicts and reasons agree with independent AI annotations. Run it with Python 3.10 or newer and the standard library.

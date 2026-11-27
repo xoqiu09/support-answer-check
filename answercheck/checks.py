@@ -38,6 +38,8 @@ def index_answers(answers):
         case_id = answer["case_id"]
         if case_id in answers_by_id:
             errors.append(f"用例 {case_id} 回答重复")
+        if not isinstance(answer.get("handoff"), bool):
+            errors.append(f"用例 {case_id} 的 handoff 必须是布尔值")
         answers_by_id[case_id] = answer
     return answers_by_id, errors
 

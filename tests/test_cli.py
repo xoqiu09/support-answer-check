@@ -71,6 +71,18 @@ class CliTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         return read_jsonl(out)
 
+    def test_readme_points_to_optional_http_model_setup(self):
+        root = DATA.parent
+        readme = (root / "README.md").read_text(encoding="utf-8")
+        with self.subTest(item="HTTP 入口"):
+            self.assertTrue("`--bot http`" in readme, "README 缺少 --bot http 入口")
+        with self.subTest(item="说明链接"):
+            self.assertTrue("](docs/M2.md)" in readme, "README 缺少模型接入说明链接")
+            self.assertTrue((root / "docs/M2.md").is_file())
+        with self.subTest(item="还没做"):
+            todo = readme.partition("\n## 还没做\n")[2].partition("\n## ")[0]
+            self.assertNotIn("接入真实模型", todo)
+
     def test_validate_passes_with_or_without_answers(self):
         for answers in (None, ANSWERS):
             with self.subTest(include_answers=answers is not None):
@@ -124,6 +136,31 @@ class CliTests(unittest.TestCase):
                     self.assertEqual(result.stdout, "")
                     self.assertFalse(out.exists())
 
+    def test_validate_and_check_require_a_boolean_handoff(self):
+        case = next(row for row in read_jsonl(DATA / "cases.jsonl") if row["id"] == "c15")
+        answer = next(
+            row for row in read_jsonl(DATA / "answers" / "naive.jsonl") if row["case_id"] == "c15"
+        )
+        cases = self.write_rows("cases.jsonl", [case])
+        out = self.temp / "check.json"
+        invalid = self.write_rows("invalid.jsonl", [answer | {"handoff": "false"}])
+        check_args = ["--policy", DATA / "policy.json", "--out", out]
+        for command, extra in (("validate", []), ("check", check_args)):
+            with self.subTest(command=command):
+                result = self.cli(command, "--kb", DATA / "kb", "--cases", cases, "--answers", invalid, *extra)
+                self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+                self.assertIn("用例 c15 的 handoff 必须是布尔值", result.stderr)
+                self.assertFalse(out.exists())
+
+        valid = self.write_rows("valid.jsonl", [answer | {"handoff": False}])
+        result = self.cli("validate", "--kb", DATA / "kb", "--cases", cases, "--answers", valid)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        result = self.cli("check", "--kb", DATA / "kb", "--cases", cases, "--answers", valid, *check_args)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        checked, = json.loads(out.read_text(encoding="utf-8"))["cases"]
+        self.assertEqual(checked["verdict"], "fail")
+        self.assertEqual([reason["label"] for reason in checked["reasons"]], ["MISSED_HANDOFF"])
+
     def test_validate_rejects_an_empty_answer_file(self):
         result = self.validate(answers=self.write_rows("answers.jsonl", []))
         self.assertEqual(result.returncode, 2, result.stderr)
@@ -158,6 +195,29 @@ class CliTests(unittest.TestCase):
         reasons = report["cases"][2]["reasons"]
         self.assertEqual([reason["label"] for reason in reasons], ["NEEDLESS_HANDOFF", "OVERPROMISE"])
         self.assertIn("保证退款", reasons[1]["detail"])
+
+    def test_check_requires_c26_to_address_installed_goods(self):
+        case = next(row for row in read_jsonl(DATA / "cases.jsonl") if row["id"] == "c26")
+        cases = self.write_rows("cases.jsonl", [case])
+        out = self.temp / "check.json"
+        for text, verdict, reasons in (
+            ("定制商品不适用无理由退货。你这台已安装的洗衣机可以无理由退货。", "fail", ["WRONG_FACT"]),
+            ("已安装的商品不适用无理由退货。", "pass", []),
+        ):
+            with self.subTest(text=text):
+                answers = self.write_rows("answers.jsonl", [{
+                    "case_id": "c26", "answer": text, "citations": ["returns#2"], "handoff": False,
+                }])
+                result = self.cli(
+                    "check", "--kb", DATA / "kb", "--cases", cases, "--policy", DATA / "policy.json",
+                    "--answers", answers, "--out", out,
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                checked, = json.loads(out.read_text(encoding="utf-8"))["cases"]
+                self.assertEqual(
+                    (checked["verdict"], [reason["label"] for reason in checked["reasons"]]),
+                    (verdict, reasons),
+                )
 
     def test_check_flags_complete_grouped_phone_numbers(self):
         case = next(row for row in read_jsonl(DATA / "cases.jsonl") if row["id"] == "c31")
@@ -343,6 +403,24 @@ class CliTests(unittest.TestCase):
         result = self.cli("agree", "--report", report, "--labels", labels, "--out", out)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(json.loads(out.read_text(encoding="utf-8")), agreement)
+
+    def test_agree_rejects_pass_labels_with_failure_reasons(self):
+        reports = DATA.parent / "reports"
+        report = reports / "naive.json"
+        labels = DATA / "labels" / "naive.jsonl"
+        rows = read_jsonl(labels)
+        c01 = next(row for row in rows if row["case_id"] == "c01")
+        c01["reasons"] = ["WRONG_FACT"]
+        invalid = self.write_rows("labels.jsonl", rows)
+        out = self.temp / "agree.json"
+        result = self.cli("agree", "--report", report, "--labels", invalid, "--out", out)
+        self.assertEqual(result.returncode, 2, result.stderr or "矛盾标注仍生成报告")
+        self.assertIn("用例 c01 的通过标注不能包含错误原因", result.stderr)
+        self.assertFalse(out.exists())
+
+        result = self.cli("agree", "--report", report, "--labels", labels, "--out", out)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(out.read_bytes(), (reports / "agree-naive.json").read_bytes())
 
     def test_agree_uses_null_only_for_a_zero_denominator(self):
         for checker, label, precision, recall in (

@@ -12,7 +12,7 @@ from answercheck.kb import load_kb
 from answercheck.models import FakeModel, HttpChatModel
 from answercheck.report import build_report
 
-from .test_cli import CASES, KB, read_jsonl
+from .test_cli import CASES, DATA, KB, read_jsonl
 
 
 def chat_reply(content):
@@ -174,6 +174,46 @@ class HttpChatModelTests(unittest.TestCase):
         self.assertEqual(result, 2)
         self.assertNotIn(key, errors.getvalue())
         self.assertIn(f"用例 {case_id} 的模型回复包含 API 密钥", errors.getvalue())
+
+    def test_cli_rejects_truncated_chat_reply(self):
+        cases_by_id = {row["id"]: row for row in read_jsonl(DATA / "cases.jsonl")}
+        complete = "签收次日起 7 天内可申请无理由退货 [returns#1]。"
+        warranty = "整机保修一年 [warranty#1]。"
+        self.urlopen.side_effect = None
+        response = self.urlopen.return_value.__enter__.return_value
+        with tempfile.TemporaryDirectory() as directory:
+            cases = Path(directory) / "cases.jsonl"
+            cases.write_text(
+                "".join(json.dumps(cases_by_id[case_id], ensure_ascii=False) + "\n" for case_id in ("c02", "c01")),
+                encoding="utf-8",
+            )
+            for finish_reason, c01_answer, expected in (
+                ("length", complete + "但已", 2),
+                ("stop", complete, 0),
+            ):
+                with self.subTest(finish_reason=finish_reason):
+                    response.read.side_effect = [
+                        json.dumps({"choices": [{
+                            "finish_reason": reason, "message": {"content": content},
+                        }]}).encode("utf-8")
+                        for reason, content in (("stop", warranty), (finish_reason, c01_answer))
+                    ]
+                    output = Path(directory) / f"{finish_reason}.jsonl"
+                    errors = io.StringIO()
+                    with redirect_stderr(errors):
+                        result = main([
+                            "run-bot", "--bot", "http", "--kb", str(DATA / "kb"), "--cases", str(cases),
+                            "--out", str(output),
+                        ])
+                    self.assertEqual(result, expected, errors.getvalue() or f"结束原因为 {finish_reason}")
+                    if finish_reason == "length":
+                        self.assertIn("用例 c01 的模型回答被截断", errors.getvalue())
+                        self.assertFalse(output.exists(), "同批已有回答被提前写出")
+                    else:
+                        self.assertEqual(read_jsonl(output), [
+                            {"case_id": "c02", "answer": warranty, "citations": ["warranty#1"], "handoff": False},
+                            {"case_id": "c01", "answer": complete, "citations": ["returns#1"], "handoff": False},
+                        ])
 
     def test_garbage_reply_reports_case_and_parse_failure(self):
         for body in (b"garbage", b'{"choices": []}', chat_reply(None), chat_reply("  "), chat_reply("???")):

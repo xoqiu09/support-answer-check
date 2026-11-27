@@ -87,9 +87,12 @@ def _post(request):
 
 def _parse_reply(reply, case_id, passages, api_key):
     try:
-        content = json.loads(reply)["choices"][0]["message"]["content"]
+        choice = json.loads(reply)["choices"][0]
+        content = choice["message"]["content"]
     except (ValueError, KeyError, IndexError, TypeError):
         raise ValueError(f"用例 {case_id} 的模型回复无法解析，缺少有效的聊天回复") from None
+    if choice.get("finish_reason") == "length":
+        raise ValueError(f"用例 {case_id} 的模型回答被截断")
     if not isinstance(content, str):
         content = ""
     if api_key in content:

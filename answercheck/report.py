@@ -35,7 +35,12 @@ def _ratio(numerator, denominator):
 
 
 def agreement(report, labels):
-    labels_by_id = {row["case_id"]: row for row in labels}
+    labels_by_id = {}
+    for row in labels:
+        case_id = row["case_id"]
+        if row["verdict"] == "pass" and row["reasons"]:
+            raise ValueError(f"用例 {case_id} 的通过标注不能包含错误原因")
+        labels_by_id[case_id] = row
     confusion = dict.fromkeys(("both_fail", "checker_only_fail", "labels_only_fail", "both_pass"), 0)
     confusion_keys = {
         ("fail", "fail"): "both_fail",
