@@ -8,6 +8,7 @@ from pathlib import Path
 from .bots import run_bot
 from .checks import validate_data
 from .kb import load_kb, load_synonyms
+from .models import HttpChatModel, Model, ReplayModel
 from .report import agreement, build_report, compare_reports
 
 
@@ -70,7 +71,21 @@ def _compare(args):
 
 
 def _run_bot(args):
-    answers = run_bot(args.bot, _read_jsonl(args.cases), load_kb(args.kb))
+    if args.bot == "replay":
+        if args.recording is None:
+            raise ValueError("使用 replay 需要指定 --recording FILE")
+        model: Model | None = ReplayModel(args.recording)
+    else:
+        if args.recording is not None:
+            raise ValueError("--recording 仅用于 replay")
+        model = HttpChatModel() if args.bot == "http" else None
+
+    cases = _read_jsonl(args.cases)
+    passages = load_kb(args.kb)
+    if model is None:
+        answers = run_bot(args.bot, cases, passages)
+    else:
+        answers = (model.answer(case, passages) for case in cases)
     text = "".join(json.dumps(answer, ensure_ascii=False) + "\n" for answer in answers)
     args.out.write_text(text, encoding="utf-8")
     return 0
@@ -108,9 +123,10 @@ def main(argv=None):
     compare.add_argument("--new", required=True, type=Path)
     compare.set_defaults(run=_compare)
 
-    generate = commands.add_parser("run-bot", help="用假机器人生成回答")
-    generate.add_argument("--bot", required=True, choices=("naive", "careful"))
+    generate = commands.add_parser("run-bot", help="生成或回放回答")
+    generate.add_argument("--bot", required=True, choices=("naive", "careful", "replay", "http"))
     _add_case_inputs(generate)
+    generate.add_argument("--recording", type=Path)
     generate.add_argument("--out", required=True, type=Path)
     generate.set_defaults(run=_run_bot)
 
