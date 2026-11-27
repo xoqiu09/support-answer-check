@@ -20,6 +20,8 @@ _QUANTITY = re.compile(
     r"(?:(?<![0-9.\-－−])[ \t\u3000]+)?"
     rf"(?P<number>{_NUMBER}){_SPACE}(?P<unit>{_UNITS})"
 )
+_DURATION_UNITS = r"个工作日|工作日|个月|小时|天|日|年"
+_WHOLE_DURATION_END = re.compile(rf"[0-9](?:{_DURATION_UNITS})\Z")
 _SMALL_CHANGE = rf"{_SPACE}[{_NUMBER_CHARS}]+{_SPACE}(?:角|毛|分(?!钟|之))"
 # 「一块五」的尾数属于金额。「1元1积分」的后一组数字有自己的单位。
 _SHORT_CHANGE = rf"{_SPACE}[{_NUMBER_CHARS}]+(?![{_NUMBER_CHARS}]|{_SPACE}(?:{_UNITS}))"
@@ -84,6 +86,9 @@ def contains_fact(text, phrase):
         pattern = r"(?<![0-9.\-－−])" + pattern
     if phrase and phrase[-1] in _DIGITS:
         pattern += r"(?![0-9]|\.[0-9])"
+    if _WHOLE_DURATION_END.search(phrase):
+        # 「1年 半年内」中的「半」另起一个时长。
+        pattern += rf"(?!半|{_SPACE}半(?!{_SPACE}(?:{_DURATION_UNITS})))"
     if not _AMOUNT.search(phrase):
         return re.search(pattern, text) is not None
 

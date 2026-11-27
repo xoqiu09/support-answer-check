@@ -1,10 +1,12 @@
 """Summarize checks, compare revisions, and measure label agreement."""
 
-from .checks import REASON_LABELS, check_answer
+from .checks import REASON_LABELS, check_answer, index_answers
 
 
 def build_report(bot, cases, answers, passages, policy, synonyms=None):
-    answers_by_id = {answer["case_id"]: answer for answer in answers}
+    answers_by_id, errors = index_answers(answers)
+    if errors:
+        raise ValueError("\n".join(errors))
     by_reason = dict.fromkeys(REASON_LABELS, 0)
     verdicts = []
     failures = 0
@@ -82,6 +84,16 @@ def agreement(report, labels):
 
 def compare_reports(base, new):
     new_verdicts = {case["case_id"]: case["verdict"] for case in new["cases"]}
+    base_ids = {case["case_id"] for case in base["cases"]}
+    differences = [
+        f"{name}缺少 {'、'.join(sorted(missing))}"
+        for name, missing in (("新版", base_ids - new_verdicts.keys()),
+                              ("原版", new_verdicts.keys() - base_ids))
+        if missing
+    ]
+    if differences:
+        raise ValueError("。".join(differences))
+
     regressions = []
     fixes = []
     for case in base["cases"]:
