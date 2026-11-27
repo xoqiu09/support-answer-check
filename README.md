@@ -1,8 +1,34 @@
 # 青柚家电客服回答质检
 
-顾客问「洗衣机已经装好了，还能无理由退货吗？」这个工具会检查客服有没有答到已安装商品的例外，以及引用的知识库段落能否支持这个回答。它也会检查该不该转人工、有没有乱承诺或泄露隐私。
+客服团队抽查售后答复时，要逐条翻政策才能确认客服有没有讲清退货例外、按要求转人工或作出超出政策的承诺。
 
-项目用虚构品牌青柚家电的六篇知识库和 40 道题，对比两个假客服。naive 每次选一个段落，通常只答第一句，从不转人工。careful 通常结合两个段落回答，在命中转人工关键词或知识库匹配度太低时转人工。工具还把自己的判定和独立标注逐条对比。
+- 批量检查答复中的错答、漏答，以及知识库引用是否包含所需依据。
+- 标出漏转或多转人工、违规承诺和疑似隐私泄露。
+- 对照独立 AI 标注，并列出换版后由通过变为不通过或反过来的用例。
+
+## 怎么验证的
+
+实跑 `/opt/homebrew/bin/python3 -m unittest`，**56 项测试全部通过**。测试确认了漏答已安装商品的退货例外、引用缺少所需依据、该转人工却没转都会被标出，换版后的退步也会被列出。逐项临时关掉事实、引用、转人工、承诺和隐私检查，每次都有对应测试按预期失败。
+
+[打开在线演示](https://xoqiu.cn/answer-check-demo/index.html)
+
+克隆后在仓库根目录运行以下两条命令，先生成示例质检报告，再跑测试。Python 版本要求见[完整运行说明](#怎么跑)。
+
+```sh
+python3 -m answercheck check --kb data/kb --cases data/cases.jsonl \
+  --policy data/policy.json --answers data/answers/careful.jsonl --out answer-check-report.json
+python3 -m unittest
+```
+
+项目使用虚构数据，演示和测试未调用真实模型，也没有真实用户参与。我负责定义需求和验收标准，指挥 AI 编程工具实现。
+
+## English overview
+
+Support teams spend time looking up policies when reviewing after-sales replies.\
+Support Answer Check flags factual errors and omissions, missing citations or citations that lack the required text, incorrect handoffs, unauthorized promises, and potential privacy leaks.\
+It compares two rule-based bots on the same 40 fictional cases, shows which cases improve or regress, and checks the results against independent AI labels.\
+All 56 tests passed, and existing tests failed as expected when individual checks were deliberately disabled.\
+I set the requirements and acceptance criteria and directed AI coding tools to build it. The demo and tests use fictional data, with no live model calls or real users.
 
 ## 怎么跑
 
@@ -64,8 +90,3 @@ Codex 根据知识库手写了 12 道新题和两套固定回答。两套回答�
 ## 还没做
 
 - 判断词表之外的同义表达，以及不同表述的证据是否支持回答。
-- 做可操作的演示页面。
-
-## English overview
-
-Support Answer Check is a Python tool for evaluating customer support answers offline. It checks required facts, citations, handoffs, unsupported promises, and privacy leaks. It compares two deterministic bots on 40 fictional cases and measures how its verdicts and reasons agree with independent AI annotations. Run it with Python 3.10 or newer and the standard library.
