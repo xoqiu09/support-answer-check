@@ -151,6 +151,21 @@ class CliTests(unittest.TestCase):
                 self.assertEqual(result.returncode, 2, result.stderr)
                 self.assertIn(message, result.stderr)
 
+    def test_validate_requires_retrieved_to_be_a_list_of_strings_when_present(self):
+        rows = read_jsonl(ANSWERS)
+        for retrieved, expected in (
+            (None, 2), ("returns#1", 2), ({"returns#1": True}, 2),
+            (["returns#1", 1], 2), ([], 0), (["returns#1"], 0),
+        ):
+            with self.subTest(retrieved=retrieved):
+                answers = self.write_rows("answers.jsonl", [
+                    *rows[:-1], rows[-1] | {"retrieved": retrieved},
+                ])
+                result = self.validate(answers=answers)
+                self.assertEqual(result.returncode, expected, result.stderr or result.stdout)
+                if expected == 2:
+                    self.assertIn("用例 c01 的 retrieved 必须是字符串列表", result.stderr)
+
     def test_validate_and_check_reject_duplicate_answers_in_either_order(self):
         rows = read_jsonl(ANSWERS)
         correct = rows[-1]
@@ -248,6 +263,49 @@ class CliTests(unittest.TestCase):
         reasons = report["cases"][2]["reasons"]
         self.assertEqual([reason["label"] for reason in reasons], ["NEEDLESS_HANDOFF", "OVERPROMISE"])
         self.assertIn("保证退款", reasons[1]["detail"])
+
+    def test_check_and_agree_include_unretrieved_citations_in_reports(self):
+        rows = read_jsonl(ANSWERS)
+        for row in rows:
+            if row["case_id"] in ("c01", "c02"):
+                row["retrieved"] = ["returns#1"]
+            elif row["case_id"] == "c04":
+                row["retrieved"] = []
+        answers = self.write_rows("answers.jsonl", rows)
+        out = self.temp / "check.json"
+        result = self.cli(
+            "check", "--kb", KB, "--cases", CASES, "--policy", POLICY,
+            "--answers", answers, "--out", out,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        report = json.loads(out.read_text(encoding="utf-8"))
+        label = "CITATION_NOT_RETRIEVED"
+        self.assertEqual(report["summary"]["by_reason"].get(label), 1)
+        c01, c02, _, c04 = report["cases"]
+        self.assertEqual(c01["verdict"], "fail")
+        reason, = c01["reasons"]
+        self.assertEqual(reason["label"], label)
+        self.assertIn("returns#2", reason["detail"])
+        self.assertEqual(c02["verdict"], "pass")
+        self.assertEqual(c04["verdict"], "pass")
+
+        labels = self.write_rows("labels.jsonl", [
+            label_case("c01", "fail", label), label_case("c02", "fail", label),
+            label_case("c03", "fail", "OVERPROMISE"), label_case("c04", "pass"),
+        ])
+        result = self.cli("agree", "--report", out, "--labels", labels)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout)["per_reason"].get(label), {
+            "both": 1, "checker_only": 0, "labels_only": 1,
+        })
+
+    def test_agree_counts_unretrieved_citation_from_independent_label_only(self):
+        label = "CITATION_NOT_RETRIEVED"
+        report = self.write_report("check.json", [report_case("c02", "pass")])
+        labels = self.write_rows("labels.jsonl", [label_case("c02", "fail", label)])
+        result = self.cli("agree", "--report", report, "--labels", labels)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout)["per_reason"][label]["labels_only"], 1)
 
     def test_check_requires_c26_to_address_installed_goods(self):
         case = next(row for row in read_jsonl(DATA / "cases.jsonl") if row["id"] == "c26")

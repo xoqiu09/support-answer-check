@@ -1,4 +1,4 @@
-"""Apply the seven quality checks to one case and answer."""
+"""Apply quality checks to one case and answer."""
 
 import re
 from fractions import Fraction
@@ -39,11 +39,17 @@ REASON_LABELS = (
     "OVERPROMISE",
     "PRIVACY_LEAK",
 )
+CITATION_NOT_RETRIEVED = "CITATION_NOT_RETRIEVED"
 
 
 def _add_reason(reasons, label, details):
     if details:
         reasons.append({"label": label, "detail": "。".join(details)})
+
+
+def valid_retrieved(answer):
+    retrieved = answer.get("retrieved", [])
+    return isinstance(retrieved, list) and all(isinstance(passage_id, str) for passage_id in retrieved)
 
 
 def index_answers(answers):
@@ -58,6 +64,8 @@ def index_answers(answers):
             errors.append(f"用例 {case_id} 缺少回答正文")
         if not isinstance(answer.get("handoff"), bool):
             errors.append(f"用例 {case_id} 的 handoff 必须是布尔值")
+        if not valid_retrieved(answer):
+            errors.append(f"用例 {case_id} 的 retrieved 必须是字符串列表")
         answers_by_id[case_id] = answer
     return answers_by_id, errors
 
@@ -166,4 +174,11 @@ def check_answer(case, answer, passages, policy, synonyms=None):
     privacy = [f"匹配隐私规则「{pattern}」" for pattern in policy["privacy_patterns"]
                if re.search(pattern, text)]
     _add_reason(reasons, "PRIVACY_LEAK", privacy)
+
+    if "retrieved" in answer:
+        retrieved = set(answer["retrieved"])
+        _add_reason(reasons, CITATION_NOT_RETRIEVED, [
+            f"引用段落「{passage_id}」未在本轮检索到"
+            for passage_id in dict.fromkeys(citations) if passage_id not in retrieved
+        ])
     return reasons

@@ -8,7 +8,7 @@
 
 ## 怎么验证的
 
-实跑 `/opt/homebrew/bin/python3 -m unittest`，**66 项测试全部通过**。测试确认了漏答已安装商品的退货例外、引用缺少所需依据、该转人工却没转都会被标出，换版后的退步也会被列出。逐项临时关掉事实、引用、转人工、承诺和隐私检查，每次都有对应测试按预期失败。
+实跑 `/opt/homebrew/bin/python3 -m unittest`，**73 项测试全部通过**。测试确认了漏答已安装商品的退货例外、引用缺少所需依据、该转人工却没转都会被标出，换版后的退步也会被列出。逐项临时关掉事实、引用、转人工、承诺和隐私检查，每次都有对应测试按预期失败。
 
 [打开在线演示](https://xoqiu.cn/answer-check-demo/index.html)
 
@@ -26,8 +26,9 @@ python3 -m unittest
 
 Support teams spend time looking up policies when reviewing after-sales replies.\
 Support Answer Check flags factual errors and omissions, missing citations or citations that lack the required text, incorrect handoffs, unauthorized promises, and potential privacy leaks.\
+Answers can include an optional `retrieved` list of passage IDs from the current turn. Any citation outside that list is flagged as `CITATION_NOT_RETRIEVED`.\
 It compares two rule-based bots on the same 40 fictional cases, shows which cases improve or regress, and checks the results against independent AI labels.\
-All 66 tests passed, and existing tests failed as expected when individual checks were deliberately disabled.\
+All 73 tests passed, and existing tests failed as expected when individual checks were deliberately disabled.\
 I set the requirements and acceptance criteria and directed AI coding tools to build it. The demo and tests use fictional data, with no live model calls or real users.
 
 ## 怎么跑
@@ -42,6 +43,8 @@ I set the requirements and acceptance criteria and directed AI coding tools to b
 /opt/homebrew/bin/python3 -m answercheck validate --kb data/kb --cases data/cases.jsonl --answers data/answers/naive.jsonl
 /opt/homebrew/bin/python3 -m answercheck validate --kb data/kb --cases data/cases.jsonl --answers data/answers/careful.jsonl
 ```
+
+回答 JSONL 可选填 `retrieved`，记录本轮检索实际返回的段落编号，例如 `["returns#1"]`。`validate` 要求该字段是字符串列表。填写后，`check` 会将列表之外的引用标为 `CITATION_NOT_RETRIEVED`，并列出对应段落编号。
 
 生成质检报告、一致性报告和回归报告。回归报告列出哪些题从通过变为不通过，以及哪些题从不通过变为通过。两份报告的题号一致时，`compare` 无退步返回 0，有退步返回 1。题号不一致时返回 2，并列出缺少的题号。
 

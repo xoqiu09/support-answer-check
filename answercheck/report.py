@@ -1,6 +1,6 @@
 """Summarize checks, compare revisions, and measure label agreement."""
 
-from .checks import REASON_LABELS, check_answer, index_answers
+from .checks import CITATION_NOT_RETRIEVED, REASON_LABELS, check_answer, index_answers
 
 
 def build_report(bot, cases, answers, passages, policy, synonyms=None):
@@ -16,7 +16,8 @@ def build_report(bot, cases, answers, passages, policy, synonyms=None):
         verdict = "fail" if reasons else "pass"
         failures += bool(reasons)
         for reason in reasons:
-            by_reason[reason["label"]] += 1
+            label = reason["label"]
+            by_reason[label] = by_reason.get(label, 0) + 1
         verdicts.append({"case_id": case_id, "verdict": verdict, "reasons": reasons})
     return {
         "bot": bot,
@@ -74,6 +75,8 @@ def agreement(report, labels):
         checker_reasons = [reason["label"] for reason in checker["reasons"]]
         labels_reasons = label["reasons"]
         checker_set, labels_set = set(checker_reasons), set(labels_reasons)
+        if CITATION_NOT_RETRIEVED in checker_set or CITATION_NOT_RETRIEVED in labels_set:
+            per_reason.setdefault(CITATION_NOT_RETRIEVED, {"both": 0, "checker_only": 0, "labels_only": 0})
         for reason in checker_set & labels_set:
             per_reason[reason]["both"] += 1
         for reason in checker_set - labels_set:
