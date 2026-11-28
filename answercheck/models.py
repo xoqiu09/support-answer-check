@@ -108,16 +108,16 @@ def _parse_reply(reply, case_id, passages, api_key):
 
     citations = []
 
-    def keep_known_citation(match):
+    def collect_citation(match):
         passage_id = match[1]
-        if passage_id not in passages:
-            _LOGGER.warning("BAD_CITATION 用例 %s 引用了不存在的段落 %r，已移除", case_id, passage_id)
-            return ""
         if passage_id not in citations:
             citations.append(passage_id)
+        if passage_id not in passages:
+            _LOGGER.warning("BAD_CITATION 用例 %s 引用了不存在的段落 %r，已从正文移除", case_id, passage_id)
+            return ""
         return match[0]
 
-    answer = _CITATION.sub(keep_known_citation, content).strip()
+    answer = _CITATION.sub(collect_citation, content).strip()
     return {"case_id": case_id, "answer": answer, "citations": citations, "handoff": handoff}
 
 

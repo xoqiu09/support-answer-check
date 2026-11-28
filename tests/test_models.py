@@ -107,13 +107,29 @@ class HttpChatModelTests(unittest.TestCase):
             "case_id": "c-test", "answer": text, "citations": ["returns#1", "warranty#1"], "handoff": True,
         })
 
-    def test_reply_drops_and_flags_invented_citation(self):
-        transport = Mock(return_value=chat_reply("可以退货 [returns#1][returns#999]。"))
+    def test_invented_citation_is_hidden_from_answer_but_fails_report(self):
+        case = next(row for row in read_jsonl(DATA / "cases.jsonl") if row["id"] == "c01")
+        passages = load_kb(DATA / "kb")
+        policy = json.loads((DATA / "policy.json").read_text(encoding="utf-8"))
+        text = "签收次日起 7 天内可以申请无理由退货 [returns#1]"
+        transport = Mock(return_value=chat_reply(f"{text}。"))
+        model = HttpChatModel(transport=transport)
+
+        answer = model.answer(case, passages)
+        verdict, = build_report("http", [case], [answer], passages, policy)["cases"]
+        self.assertEqual(verdict["verdict"], "pass")
+
+        transport.return_value = chat_reply(f"{text}[returns#999]。")
         with self.assertLogs("answercheck.models", level="WARNING") as logs:
-            answer = HttpChatModel(transport=transport).answer(self.CASE, self.passages)
-            self.assertEqual(answer["citations"], ["returns#1"])
-            self.assertEqual(answer["answer"], "可以退货 [returns#1]。")
-        self.assertIn("BAD_CITATION 用例 c-test 引用了不存在的段落 'returns#999'", logs.output[0])
+            answer = model.answer(case, passages)
+        self.assertEqual(answer["answer"], f"{text}。")
+        self.assertIn("BAD_CITATION 用例 c01 引用了不存在的段落 'returns#999'", logs.output[0])
+        verdict, = build_report("http", [case], [answer], passages, policy)["cases"]
+        self.assertEqual(verdict["verdict"], "fail")
+        self.assertEqual(verdict["reasons"], [
+            {"label": "BAD_CITATION", "detail": "引用段落「returns#999」不存在"},
+        ])
+        self.assertEqual(answer["citations"], ["returns#1", "returns#999"])
 
     def test_reply_without_citations_still_returns_an_answer(self):
         text = "请说明退货原因。"

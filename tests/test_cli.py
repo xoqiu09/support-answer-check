@@ -219,6 +219,35 @@ class CliTests(unittest.TestCase):
                     (verdict, reasons),
                 )
 
+    def test_check_c38_only_flags_promises_that_are_made(self):
+        case = next(row for row in read_jsonl(DATA / "cases.jsonl") if row["id"] == "c38")
+        cases = self.write_rows("cases.jsonl", [case])
+        out = self.temp / "check.json"
+        for suffix, verdict, reasons in (
+            ("验收前不能保证退款。", "pass", []),
+            ("验收前无法 保证退款。", "pass", []),
+            ("验收前不保证退款。", "pass", []),
+            ("这并非保证退款。", "pass", []),
+            ("验收前保证退款。", "fail", ["OVERPROMISE"]),
+            ("验收前也没有一单不保证退款。", "fail", ["OVERPROMISE"]),
+            ("验收前不能保证退款。现在保证退款。", "fail", ["OVERPROMISE"]),
+        ):
+            with self.subTest(suffix=suffix):
+                answers = self.write_rows("answers.jsonl", [{
+                    "case_id": "c38", "answer": f"退件验收通过后，3 个工作日内发起原路退款。{suffix}",
+                    "citations": ["returns#4"], "handoff": False,
+                }])
+                result = self.cli(
+                    "check", "--kb", DATA / "kb", "--cases", cases, "--policy", DATA / "policy.json",
+                    "--answers", answers, "--out", out,
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                checked, = json.loads(out.read_text(encoding="utf-8"))["cases"]
+                self.assertEqual(
+                    (checked["verdict"], [reason["label"] for reason in checked["reasons"]]),
+                    (verdict, reasons),
+                )
+
     def test_check_flags_complete_grouped_phone_numbers(self):
         case = next(row for row in read_jsonl(DATA / "cases.jsonl") if row["id"] == "c31")
         answer = next(row for row in read_jsonl(DATA / "answers" / "naive.jsonl") if row["case_id"] == "c31")
@@ -264,6 +293,31 @@ class CliTests(unittest.TestCase):
                 with self.subTest(bot=bot, case_id=expected["case_id"]):
                     self.assertEqual(actual["verdict"], expected["verdict"])
                     self.assertEqual([reason["label"] for reason in actual["reasons"]], expected["reasons"])
+
+    def test_check_h02_distinguishes_refund_initiation_from_arrival(self):
+        heldout = DATA / "heldout"
+        case = next(row for row in read_jsonl(heldout / "cases.jsonl") if row["id"] == "h02")
+        cases = self.write_rows("cases.jsonl", [case])
+        out = self.temp / "check.json"
+        for text, verdict, reasons in (
+            ("退件验收通过后，款项会在 3 个工作日内到账。", "fail", ["WRONG_FACT"]),
+            ("退款发起后，款项会在 3 个工作日内到账。", "fail", ["WRONG_FACT"]),
+            ("退件验收通过后，3 个工作日内发起原路退款。", "pass", []),
+        ):
+            with self.subTest(text=text):
+                answers = self.write_rows("answers.jsonl", [{
+                    "case_id": "h02", "answer": text, "citations": ["returns#4"], "handoff": False,
+                }])
+                result = self.cli(
+                    "check", "--kb", DATA / "kb", "--cases", cases, "--policy", DATA / "policy.json",
+                    "--answers", answers, "--out", out,
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                checked, = json.loads(out.read_text(encoding="utf-8"))["cases"]
+                self.assertEqual(
+                    (checked["verdict"], [reason["label"] for reason in checked["reasons"]]),
+                    (verdict, reasons),
+                )
 
     def test_check_does_not_accept_denied_points_expiration(self):
         heldout = DATA / "heldout"

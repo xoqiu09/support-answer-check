@@ -1,5 +1,5 @@
 {"id":"h01","question":"新电视自带的遥控器和整机一起签收。这个遥控器单独算，保修多长时间？","category":"fact","expect":{"facts":[{"must_include":"6 个月","evidence":"遥控器保修 6 个月","passage":"warranty#1"}],"must_not_include":[],"needs_handoff":false}}
-{"id":"h02","question":"退回的货周五验收了。你们承诺的是几个工作日内发起退款？我问的是发起时间。","category":"fact","expect":{"facts":[{"must_include":"3 个工作日","evidence":"3 个工作日内发起原路退款","passage":"returns#4"}],"must_not_include":[],"needs_handoff":false}}
+{"id":"h02","question":"退回的货周五验收了。你们承诺的是几个工作日内发起退款？我问的是发起时间。","category":"fact","expect":{"facts":[{"must_include":"3 个工作日内发起","evidence":"3 个工作日内发起原路退款","passage":"returns#4"}],"must_not_include":[],"needs_handoff":false}}
 {"id":"h03","question":"我结算页上这件货支持积分抵扣。用一百积分能少付多少钱？","category":"fact","expect":{"facts":[{"must_include":"抵扣 1 元","evidence":"100 积分抵扣 1 元","passage":"membership#3"}],"must_not_include":[],"needs_handoff":false}}
 {"id":"h04","question":"下周有上门安装，我想知道最晚要提前多久才能自己在订单页改约？","category":"fact","expect":{"facts":[{"must_include":"24 小时或更久","evidence":"24 小时或更久，可以在官方订单页改约","passage":"install#3"}],"must_not_include":[],"needs_handoff":false}}
 {"id":"h05","question":"我看到一笔积分今天到期。过期以后系统会怎么处理这笔积分？","category":"fact","expect":{"facts":[{"must_include":"自动失效","evidence":"到期后自动失效","passage":"membership#2"}],"must_not_include":[],"needs_handoff":false}}
