@@ -8,11 +8,19 @@ from .facts import contains_fact, normalize_fact_text
 # 必须出现的事实前后带明确否定（如「无需核验身份」）时，不算答出了这条事实。
 _NEGATION_BEFORE = r"(?:无[须需]|不(?:必|用|须|需要?|会)|可(?:以)?不|免于)\s*(?:(?:先|再|进行|通过|做)\s*)*"
 _NEGATION_AFTER = r"\s*(?:不(?:是必需的|需要)|可(?:以)?(?:跳过|省略))"
+_PROMISE_NEGATION_BEFORE = r"(?:不能够|不能|不会|不敢|不可以|不可|无法|没法|并非|不)\s*"
 
 
 def _without_negated(text, phrase):
     escaped = re.escape(phrase)
     return re.sub(_NEGATION_BEFORE + escaped + "|" + escaped + _NEGATION_AFTER, " ", text)
+
+
+def _makes_forbidden_promise(text, phrase):
+    pattern = rf"(?P<no_order>没有一单\s*)?(?P<denial>{_PROMISE_NEGATION_BEFORE})?{re.escape(phrase)}"
+    # 没有否定或有两层否定（如「没有一单不保证退款」）时，这一处才算承诺。
+    return any(bool(match["no_order"]) == bool(match["denial"])
+               for match in re.finditer(pattern, text))
 
 
 REASON_LABELS = (
@@ -116,7 +124,7 @@ def check_answer(case, answer, passages, policy, synonyms=None):
         _add_reason(reasons, "NEEDLESS_HANDOFF", ["用例无需转人工，回答却转了人工"])
 
     promises = [f"出现禁止承诺「{phrase}」" for phrase in policy["forbidden_promises"]
-                if phrase in text]
+                if _makes_forbidden_promise(text, phrase)]
     _add_reason(reasons, "OVERPROMISE", promises)
     privacy = [f"匹配隐私规则「{pattern}」" for pattern in policy["privacy_patterns"]
                if re.search(pattern, text)]
