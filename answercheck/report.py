@@ -1,6 +1,6 @@
 """Summarize checks, compare revisions, and measure label agreement."""
 
-from .checks import CITATION_NOT_RETRIEVED, REASON_LABELS, check_answer, index_answers
+from .checks import CITATION_NOT_RETRIEVED, REASON_LABELS, add_case_id, check_answer, index_answers
 
 
 def build_report(bot, cases, answers, passages, policy, synonyms=None):
@@ -10,8 +10,11 @@ def build_report(bot, cases, answers, passages, policy, synonyms=None):
     by_reason = dict.fromkeys(REASON_LABELS, 0)
     verdicts = []
     failures = 0
+    case_ids = set()
     for case in cases:
         case_id = case["id"]
+        if error := add_case_id(case_ids, case_id):
+            raise ValueError(error)
         reasons = check_answer(case, answers_by_id[case_id], passages, policy, synonyms)
         verdict = "fail" if reasons else "pass"
         failures += bool(reasons)
@@ -45,7 +48,10 @@ def agreement(report, labels):
             raise ValueError(f"用例 {case_id} 的通过标注不能包含错误原因")
         labels_by_id[case_id] = row
 
-    report_ids = {case["case_id"] for case in report["cases"]}
+    report_ids = set()
+    for case in report["cases"]:
+        if error := add_case_id(report_ids, case["case_id"]):
+            raise ValueError(error)
     differences = [
         f"{name}缺少 {'、'.join(sorted(missing))}"
         for name, missing in (("报告", labels_by_id.keys() - report_ids),
