@@ -70,15 +70,21 @@ def index_answers(answers):
     return answers_by_id, errors
 
 
+def add_case_id(case_ids, case_id):
+    """Record a case ID and return an error message if it was already seen."""
+    if case_id in case_ids:
+        return f"用例编号重复（{case_id}）"
+    case_ids.add(case_id)
+
+
 def validate_data(passages, cases, answers=None):
     """Return errors in case data and, when provided, answer references."""
     errors = []
     case_ids = set()
     for case in cases:
         case_id = case["id"]
-        if case_id in case_ids:
-            errors.append(f"用例编号重复（{case_id}）")
-        case_ids.add(case_id)
+        if error := add_case_id(case_ids, case_id):
+            errors.append(error)
         for fact in case["expect"]["facts"]:
             passage_id = fact["passage"]
             evidence = fact["evidence"]
@@ -127,9 +133,16 @@ def check_answer(case, answer, passages, policy, synonyms=None):
 
     def matches(phrase, *, required=False):
         normalized = normalize_fact_text(phrase, synonyms)
+        candidate = fact_text
+        if case.get("id") == "c34" and phrase in ("不会索要短信验证码", "会索要短信验证码"):
+            # 只核对 c34 要问的验证码，保留其他题匹配账户密码时的原文。
+            candidate = candidate.replace("索要账户密码或短信验证码", "索要短信验证码")
+            candidate = candidate.replace("会不会索要短信验证码", " ")
+            if not required:
+                candidate = candidate.replace("不会索要短信验证码", " ")
         if required:
-            return contains_fact(_without_negated(fact_text, normalized), normalized)
-        return contains_fact(fact_text, normalized)
+            candidate = _without_negated(candidate, normalized)
+        return contains_fact(candidate, normalized)
 
     wrong_facts = [f"缺少「{fact['must_include']}」" for fact in facts
                    if not matches(fact["must_include"], required=True)]

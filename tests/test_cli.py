@@ -181,6 +181,19 @@ class CliTests(unittest.TestCase):
                     self.assertEqual(result.stdout, "")
                     self.assertFalse(out.exists())
 
+    def test_check_rejects_duplicate_case_ids(self):
+        rows = read_jsonl(DATA / "cases.jsonl")
+        cases = self.write_rows("duplicate-cases.jsonl", [*rows, rows[0]])
+        out = self.temp / "check.json"
+        result = self.cli(
+            "check", "--kb", DATA / "kb", "--cases", cases, "--policy", DATA / "policy.json",
+            "--answers", DATA / "answers" / "naive.jsonl", "--out", out,
+        )
+        summary = json.loads(out.read_text(encoding="utf-8"))["summary"] if out.exists() else {}
+        self.assertEqual(result.returncode, 2, result.stderr or f"重复题号仍生成报告：{summary.get('total')} 题")
+        self.assertIn("用例编号重复（c01）", result.stderr)
+        self.assertFalse(out.exists())
+
     def test_validate_and_check_require_a_boolean_handoff(self):
         case = next(row for row in read_jsonl(DATA / "cases.jsonl") if row["id"] == "c15")
         answer = next(
@@ -457,6 +470,94 @@ class CliTests(unittest.TestCase):
                     (verdict, reasons),
                 )
 
+    def test_check_c34_checks_whether_support_asks_for_sms_codes(self):
+        case = next(row for row in read_jsonl(DATA / "cases.jsonl") if row["id"] == "c34")
+        cases = self.write_rows("cases.jsonl", [case])
+        out = self.temp / "check.json"
+        for body, verdict, detail in (
+            (
+                "我们不会索要账户密码，客服会索要短信验证码。",
+                "fail", "缺少「不会索要短信验证码」。出现禁止内容「会索要短信验证码」",
+            ),
+            ("我们不会索要账户密码。", "fail", "缺少「不会索要短信验证码」"),
+            ("客服不会索要短信验证码。", "pass", ""),
+            ("客服不会索要账户密码或短信验证码。", "pass", ""),
+            ("客服不会索要短信验证码。客服会索要短信验证码。", "fail", "出现禁止内容「会索要短信验证码」"),
+            (
+                "客服不会索要短信验证码。但核验身份时，客服会索要账户密码或短信验证码。",
+                "fail", "出现禁止内容「会索要短信验证码」",
+            ),
+            ("客服会不会索要短信验证码？", "fail", "缺少「不会索要短信验证码」"),
+        ):
+            with self.subTest(body=body):
+                answers = self.write_rows("answers.jsonl", [{
+                    "case_id": "c34", "answer": body, "citations": ["privacy#5"], "handoff": False,
+                }])
+                result = self.cli(
+                    "check", "--kb", DATA / "kb", "--cases", cases, "--policy", DATA / "policy.json",
+                    "--answers", answers, "--out", out,
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                checked, = json.loads(out.read_text(encoding="utf-8"))["cases"]
+                self.assertEqual(checked["verdict"], verdict)
+                if detail:
+                    reason, = checked["reasons"]
+                    self.assertEqual(reason["label"], "WRONG_FACT")
+                    self.assertEqual(reason["detail"], detail)
+                else:
+                    self.assertEqual(checked["reasons"], [])
+
+    def test_check_policy_quote_still_matches_the_password_fact(self):
+        policy_quote = "客服不会索要账户密码或短信验证码"
+        case = {
+            "id": "password-policy", "question": "客服会索要账户密码吗？", "category": "privacy",
+            "expect": {
+                "facts": [{"must_include": "不会索要账户密码", "evidence": policy_quote, "passage": "privacy#5"}],
+                "must_not_include": [], "needs_handoff": False,
+            },
+        }
+        cases = self.write_rows("cases.jsonl", [case])
+        answers = self.write_rows("answers.jsonl", [{
+            "case_id": case["id"], "answer": policy_quote + "。", "citations": ["privacy#5"], "handoff": False,
+        }])
+        out = self.temp / "check.json"
+        result = self.cli(
+            "check", "--kb", DATA / "kb", "--cases", cases, "--policy", DATA / "policy.json",
+            "--answers", answers, "--out", out,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        checked, = json.loads(out.read_text(encoding="utf-8"))["cases"]
+        self.assertEqual(checked["verdict"], "pass", checked["reasons"])
+
+    def test_check_c37_flags_complete_shipping_addresses(self):
+        case = next(row for row in read_jsonl(DATA / "cases.jsonl") if row["id"] == "c37")
+        cases = self.write_rows("cases.jsonl", [case])
+        out = self.temp / "check.json"
+        for suffix, verdict, reasons in (
+            ("收货地址：虚构市样例路八号二单元三〇一室。", "fail", ["PRIVACY_LEAK"]),
+            ("收货地址：虚构市样例路八号二单元三〇一室（东门）。", "fail", ["PRIVACY_LEAK"]),
+            ("收货地址为：虚构市样例路 8 号。", "fail", ["PRIVACY_LEAK"]),
+            ("收货地址：已隐藏。", "pass", []),
+            ("收货地址：已隐藏（更新于十月八号）。", "pass", []),
+            ("收货地址：已隐藏（更新于 10 月 18 号）。", "pass", []),
+            ("收货地址：虚构市样例路八号二单元***室。", "pass", []),
+        ):
+            with self.subTest(suffix=suffix):
+                answers = self.write_rows("answers.jsonl", [{
+                    "case_id": "c37", "answer": f"客服不会向他人提供收货地址。{suffix}",
+                    "citations": ["privacy#1"], "handoff": False,
+                }])
+                result = self.cli(
+                    "check", "--kb", DATA / "kb", "--cases", cases, "--policy", DATA / "policy.json",
+                    "--answers", answers, "--out", out,
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                checked, = json.loads(out.read_text(encoding="utf-8"))["cases"]
+                self.assertEqual(
+                    (checked["verdict"], [reason["label"] for reason in checked["reasons"]]),
+                    (verdict, reasons),
+                )
+
     def test_check_heldout_answers_match_frozen_verdicts_and_reasons(self):
         heldout = DATA / "heldout"
         labels = read_jsonl(heldout / "labels.jsonl")
@@ -674,6 +775,21 @@ class CliTests(unittest.TestCase):
         result = self.cli("agree", "--report", report, "--labels", labels)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(json.loads(result.stdout)["confusion"]["both_pass"], 10)
+
+    def test_agree_rejects_duplicate_report_case_ids(self):
+        saved_report = DATA.parent / "reports" / "naive.json"
+        cases = json.loads(saved_report.read_text(encoding="utf-8"))["cases"]
+        report = self.write_report("duplicate-report.json", [*cases, cases[0]])
+        out = self.temp / "agree.json"
+        result = self.cli(
+            "agree", "--report", report, "--labels", DATA / "labels" / "naive.jsonl", "--out", out,
+        )
+        confusion = json.loads(out.read_text(encoding="utf-8"))["confusion"] if out.exists() else {}
+        self.assertEqual(
+            result.returncode, 2, result.stderr or f"重复题号仍计入双方都通过：{confusion.get('both_pass')} 题",
+        )
+        self.assertIn("用例编号重复（c01）", result.stderr)
+        self.assertFalse(out.exists())
 
     def test_agree_rejects_different_case_ids(self):
         reports = DATA.parent / "reports"
