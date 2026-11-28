@@ -343,6 +343,36 @@ class CliTests(unittest.TestCase):
                     (verdict, reasons),
                 )
 
+    def test_check_c36_only_flags_affirmed_forbidden_facts(self):
+        case = next(row for row in read_jsonl(DATA / "cases.jsonl") if row["id"] == "c36")
+        cases = self.write_rows("cases.jsonl", [case])
+        out = self.temp / "check.json"
+        for suffix, verdict, reasons in (
+            ("不是 30 天无理由退货。", "pass", []),
+            ("并不是 30 天无理由退货。", "pass", []),
+            ("另外也支持 30 天无理由退货。", "fail", ["WRONG_FACT"]),
+            ("不是 30 天无理由退货。部分订单支持 30 天无理由退货。", "fail", ["WRONG_FACT"]),
+            ("没有一单不是 30 天无理由退货。", "fail", ["WRONG_FACT"]),
+            ("没有订单不是 30 天无理由退货。", "fail", ["WRONG_FACT"]),
+            ("没有任何订单并不是 30 天无理由退货。", "fail", ["WRONG_FACT"]),
+            ("不可能不是 30 天无理由退货。", "fail", ["WRONG_FACT"]),
+        ):
+            with self.subTest(suffix=suffix):
+                answers = self.write_rows("answers.jsonl", [{
+                    "case_id": "c36", "citations": ["returns#1"], "handoff": False,
+                    "answer": f"自签收次日起 7 天内可以申请无理由退货，{suffix}",
+                }])
+                result = self.cli(
+                    "check", "--kb", DATA / "kb", "--cases", cases, "--policy", DATA / "policy.json",
+                    "--answers", answers, "--out", out,
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                checked, = json.loads(out.read_text(encoding="utf-8"))["cases"]
+                self.assertEqual(
+                    (checked["verdict"], [reason["label"] for reason in checked["reasons"]]),
+                    (verdict, reasons),
+                )
+
     def test_check_c38_only_flags_promises_that_are_made(self):
         case = next(row for row in read_jsonl(DATA / "cases.jsonl") if row["id"] == "c38")
         cases = self.write_rows("cases.jsonl", [case])
@@ -420,11 +450,20 @@ class CliTests(unittest.TestCase):
         out = self.temp / "check.json"
         for suffix, verdict, reasons in (
             ("收件人电话是 19900000001", "fail", ["PRIVACY_LEAK"]),
+            ("收件人电话是 19900000001 19900000002", "fail", ["PRIVACY_LEAK"]),
+            ("收件人电话是 19900000001，19900000002", "fail", ["PRIVACY_LEAK"]),
             ("收件人电话是 199 0000 0001", "fail", ["PRIVACY_LEAK"]),
             ("收件人电话是 199-0000-0001", "fail", ["PRIVACY_LEAK"]),
             ("收件人电话是 199  0000 0001", "fail", ["PRIVACY_LEAK"]),
             ("收件人电话是 1990 000-0001", "fail", ["PRIVACY_LEAK"]),
             ("收件人电话是 199****0001", "pass", []),
+            ("收件人电话是 199****0001 199****0002", "pass", []),
+            ("收件人电话是 19900000001 199****0002", "fail", ["PRIVACY_LEAK"]),
+            ("收件人电话是 199****0002 19900000001", "fail", ["PRIVACY_LEAK"]),
+            ("收件人电话是 19900000001 199-****-0002", "fail", ["PRIVACY_LEAK"]),
+            ("收件人电话是 199-****-0002 19900000001", "fail", ["PRIVACY_LEAK"]),
+            ("收件人电话是 199-****-0002 199-0000-0001 199-****-0003", "fail", ["PRIVACY_LEAK"]),
+            ("收件人电话是 199-****-0001 199-****-0002", "pass", []),
             ("公开配件型号是 Q2199-0000-0001", "pass", []),
             ("公开配件型号是 Q199-0000-0001-2", "pass", []),
         ):
@@ -623,6 +662,41 @@ class CliTests(unittest.TestCase):
                 checked, = json.loads(out.read_text(encoding="utf-8"))["cases"]
                 self.assertEqual(checked["verdict"], verdict)
                 self.assertEqual([reason["label"] for reason in checked["reasons"]], reasons)
+
+    def test_check_keeps_whole_unit_and_remote_warranty_terms_separate(self):
+        warranty_cases = [
+            row for path in (DATA / "cases.jsonl", DATA / "heldout" / "cases.jsonl")
+            for row in read_jsonl(path) if row["id"] in {"c02", "h01", "h07"}
+        ]
+        cases = self.write_rows("cases.jsonl", warranty_cases)
+        out = self.temp / "check.json"
+        for body, verdict, reasons in (
+            ("整机保修 6 个月，遥控器保修 1 年。", "fail", ["WRONG_FACT"]),
+            ("整机保修 1 年，遥控器保修 6 个月。", "pass", []),
+            ("整机保修：6 个月，遥控器保修：1 年。", "fail", ["WRONG_FACT"]),
+            ("整机保修：1 年，遥控器保修：6 个月。", "pass", []),
+            ("整机：保修 6 个月，遥控器：保修 1 年。", "fail", ["WRONG_FACT"]),
+            ("整机：保修 1 年，遥控器：保修 6 个月。", "pass", []),
+            ("整机: 6 个月，遥控器: 1 年。", "fail", ["WRONG_FACT"]),
+            ("整机: 1 年，遥控器: 6 个月。", "pass", []),
+            ("遥控器的保修期为六个月，整机保修期为一年。", "pass", []),
+        ):
+            answers = self.write_rows("answers.jsonl", [{
+                "case_id": case["id"], "answer": body, "citations": ["warranty#1"], "handoff": False,
+            } for case in warranty_cases])
+            result = self.cli(
+                "check", "--kb", DATA / "kb", "--cases", cases, "--policy", DATA / "policy.json",
+                "--answers", answers, "--out", out,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            checked_cases = json.loads(out.read_text(encoding="utf-8"))["cases"]
+            self.assertEqual([row["case_id"] for row in checked_cases], ["c02", "h01", "h07"])
+            for checked in checked_cases:
+                with self.subTest(body=body, case=checked["case_id"]):
+                    self.assertEqual(
+                        (checked["verdict"], [reason["label"] for reason in checked["reasons"]]),
+                        (verdict, reasons),
+                    )
 
     def test_check_does_not_accept_one_and_a_half_years_for_one_year(self):
         case = next(row for row in read_jsonl(DATA / "cases.jsonl") if row["id"] == "c02")
