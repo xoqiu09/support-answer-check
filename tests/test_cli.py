@@ -108,6 +108,36 @@ class CliTests(unittest.TestCase):
                 self.assertIn("c01", result.stderr)
                 self.assertIn(message, result.stderr)
 
+    def test_validate_reports_blank_evidence_and_missing_passage_together(self):
+        case = read_jsonl(CASES)[0]
+        case["expect"]["facts"][0].update(evidence="", passage="returns#999")
+        result = self.validate(cases=self.write_rows("cases.jsonl", [case]))
+        self.assertEqual(result.returncode, 2, result.stderr)
+        self.assertCountEqual(result.stderr.splitlines(), [
+            "用例 c01 缺少证据原文",
+            "用例 c01 的段落 returns#999 不存在",
+        ])
+
+    def test_validate_and_check_reject_blank_fact_evidence(self):
+        case = next(row for row in read_jsonl(DATA / "cases.jsonl") if row["id"] == "c01")
+        answer = next(
+            row for row in read_jsonl(DATA / "answers" / "careful.jsonl") if row["case_id"] == "c01"
+        )
+        answers = self.write_rows("answers.jsonl", [answer | {"citations": ["warranty#1"]}])
+        for evidence in ("", "   "):
+            case["expect"]["facts"][0]["evidence"] = evidence
+            cases = self.write_rows("cases.jsonl", [case])
+            out = self.temp / f"check-{len(evidence)}.json"
+            check_args = ["--policy", DATA / "policy.json", "--out", out]
+            for command, extra in (("validate", []), ("check", check_args)):
+                with self.subTest(evidence=evidence, command=command):
+                    result = self.cli(
+                        command, "--kb", DATA / "kb", "--cases", cases, "--answers", answers, *extra,
+                    )
+                    self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+                    self.assertIn("用例 c01 缺少证据原文", result.stderr)
+                    self.assertFalse(out.exists())
+
     def test_validate_rejects_each_answer_data_error(self):
         answers = read_jsonl(ANSWERS)
         examples = [
@@ -472,6 +502,30 @@ class CliTests(unittest.TestCase):
         self.assertIn("用例 c01 的通过标注不能包含错误原因", result.stderr)
         self.assertFalse(out.exists())
 
+        result = self.cli("agree", "--report", report, "--labels", labels, "--out", out)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(out.read_bytes(), (reports / "agree-naive.json").read_bytes())
+
+    def test_agree_rejects_different_case_ids(self):
+        reports = DATA.parent / "reports"
+        report = reports / "naive.json"
+        labels = DATA / "labels" / "naive.jsonl"
+        rows = read_jsonl(labels)
+        extra = next(row for row in read_jsonl(DATA / "heldout" / "labels.jsonl") if row["case_id"] == "h07")
+        for invalid_rows, messages in (
+            ([*rows, extra], ("报告缺少 h07",)),
+            ([*rows[1:], extra], ("报告缺少 h07", "标注缺少 c01")),
+        ):
+            with self.subTest(label_count=len(invalid_rows)):
+                invalid = self.write_rows("labels.jsonl", invalid_rows)
+                out = self.temp / f"agree-{len(invalid_rows)}.json"
+                result = self.cli("agree", "--report", report, "--labels", invalid, "--out", out)
+                self.assertEqual(result.returncode, 2, result.stderr or "题号不一致仍生成报告")
+                for message in messages:
+                    self.assertIn(message, result.stderr)
+                self.assertFalse(out.exists())
+
+        out = self.temp / "agree.json"
         result = self.cli("agree", "--report", report, "--labels", labels, "--out", out)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(out.read_bytes(), (reports / "agree-naive.json").read_bytes())

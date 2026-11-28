@@ -63,10 +63,13 @@ def validate_data(passages, cases, answers=None):
         case_ids.add(case_id)
         for fact in case["expect"]["facts"]:
             passage_id = fact["passage"]
+            evidence = fact["evidence"]
+            has_evidence = bool(evidence.strip())
+            if not has_evidence:
+                errors.append(f"用例 {case_id} 缺少证据原文")
             if passage_id not in passages:
                 errors.append(f"用例 {case_id} 的段落 {passage_id} 不存在")
-            elif fact["evidence"] not in passages[passage_id]:
-                evidence = fact["evidence"]
+            elif has_evidence and evidence not in passages[passage_id]:
                 errors.append(f"用例 {case_id} 的段落 {passage_id} 缺少原文「{evidence}」")
 
     if answers is not None:
@@ -89,6 +92,9 @@ def check_answer(case, answer, passages, policy, synonyms=None):
     """Return the reasons for failing, in the specified label order."""
     expect = case["expect"]
     facts = expect["facts"]
+    if any(not fact["evidence"].strip() for fact in facts):
+        raise ValueError(f"用例 {case['id']} 缺少证据原文")
+
     text = answer["answer"]
     citations = answer["citations"]
     reasons = []
