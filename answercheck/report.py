@@ -41,6 +41,17 @@ def agreement(report, labels):
         if row["verdict"] == "pass" and row["reasons"]:
             raise ValueError(f"用例 {case_id} 的通过标注不能包含错误原因")
         labels_by_id[case_id] = row
+
+    report_ids = {case["case_id"] for case in report["cases"]}
+    differences = [
+        f"{name}缺少 {'、'.join(sorted(missing))}"
+        for name, missing in (("报告", labels_by_id.keys() - report_ids),
+                              ("标注", report_ids - labels_by_id.keys()))
+        if missing
+    ]
+    if differences:
+        raise ValueError("。".join(differences))
+
     confusion = dict.fromkeys(("both_fail", "checker_only_fail", "labels_only_fail", "both_pass"), 0)
     confusion_keys = {
         ("fail", "fail"): "both_fail",
