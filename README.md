@@ -8,7 +8,7 @@
 
 ## 怎么验证的
 
-实跑 `/opt/homebrew/bin/python3 -m unittest`，**61 项测试全部通过**。测试确认了漏答已安装商品的退货例外、引用缺少所需依据、该转人工却没转都会被标出，换版后的退步也会被列出。逐项临时关掉事实、引用、转人工、承诺和隐私检查，每次都有对应测试按预期失败。
+实跑 `/opt/homebrew/bin/python3 -m unittest`，**66 项测试全部通过**。测试确认了漏答已安装商品的退货例外、引用缺少所需依据、该转人工却没转都会被标出，换版后的退步也会被列出。逐项临时关掉事实、引用、转人工、承诺和隐私检查，每次都有对应测试按预期失败。
 
 [打开在线演示](https://xoqiu.cn/answer-check-demo/index.html)
 
@@ -27,7 +27,7 @@ python3 -m unittest
 Support teams spend time looking up policies when reviewing after-sales replies.\
 Support Answer Check flags factual errors and omissions, missing citations or citations that lack the required text, incorrect handoffs, unauthorized promises, and potential privacy leaks.\
 It compares two rule-based bots on the same 40 fictional cases, shows which cases improve or regress, and checks the results against independent AI labels.\
-All 61 tests passed, and existing tests failed as expected when individual checks were deliberately disabled.\
+All 66 tests passed, and existing tests failed as expected when individual checks were deliberately disabled.\
 I set the requirements and acceptance criteria and directed AI coding tools to build it. The demo and tests use fictional data, with no live model calls or real users.
 
 ## 怎么跑

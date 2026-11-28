@@ -38,6 +38,8 @@ def agreement(report, labels):
     labels_by_id = {}
     for row in labels:
         case_id = row["case_id"]
+        if case_id in labels_by_id:
+            raise ValueError(f"{case_id} 标注重复")
         if row["verdict"] == "pass" and row["reasons"]:
             raise ValueError(f"用例 {case_id} 的通过标注不能包含错误原因")
         labels_by_id[case_id] = row
@@ -99,6 +101,12 @@ def agreement(report, labels):
 
 
 def compare_reports(base, new):
+    for side, report in (("原版", base), ("新版", new)):
+        for case in report["cases"]:
+            verdict = case["verdict"]
+            if verdict not in ("pass", "fail"):
+                raise ValueError(f"{side}用例 {case['case_id']} 的判定值无效 {verdict!r}")
+
     new_verdicts = {case["case_id"]: case["verdict"] for case in new["cases"]}
     base_ids = {case["case_id"] for case in base["cases"]}
     differences = [
