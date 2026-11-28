@@ -10,6 +10,14 @@ from .facts import AMOUNT_PATTERN, amount_value, contains_fact, normalize_fact_t
 _NEGATION_BEFORE = r"(?:无[须需]|不(?:必|用|须|需要?|会)|可(?:以)?不|免于)\s*(?:(?:先|再|进行|通过|做)\s*)*"
 _NEGATION_AFTER = r"\s*(?:不(?:是必需的|需要)|可(?:以)?(?:跳过|省略))"
 _PROMISE_NEGATION_BEFORE = r"(?:不能够|不能|不会|不敢|不可以|不可|无法|没法|并非|不)\s*"
+_FORBIDDEN_FACT_DENIAL = (
+    r"(?P<outer_denial>(?:没有\s*(?:一单|(?:(?:任何|一[个笔])\s*)?订单)"
+    r"|不(?:可能|会|能)|并非|并?不是)\s*)?并?不是\s*"
+)
+_WARRANTY_TERM = re.compile(
+    r"(?P<subject>整机|遥控器)\s*(?:(?:的\s*|[:：]\s*)?保修(?:期限?)?\s*|[:：]\s*)"
+    r"(?:(?:为|是)\s*)?(?:[:：]\s*)?[0-9]+(?:\.[0-9]+)?(?:年|个月)"
+)
 _POINTS_RATE = re.compile(
     r"(?:(?P<denied>并非|并?不是)\s*)?(?:每\s*)?"
     r"(?<![0-9.])(?P<points>[+-]?[0-9]+(?:[,，][0-9]{3})*(?:\.[0-9]+)?)\s*积分\s*"
@@ -131,21 +139,33 @@ def check_answer(case, answer, passages, policy, synonyms=None):
     if any(rate for _, rate in expected_rates):
         fact_text = _POINTS_RATE.sub(lambda rate: " " if rate["denied"] else rate[0], fact_text)
 
-    def matches(phrase, *, required=False):
+    def matches(phrase, *, evidence=None):
         normalized = normalize_fact_text(phrase, synonyms)
         candidate = fact_text
         if case.get("id") == "c34" and phrase in ("不会索要短信验证码", "会索要短信验证码"):
             # 只核对 c34 要问的验证码，保留其他题匹配账户密码时的原文。
             candidate = candidate.replace("索要账户密码或短信验证码", "索要短信验证码")
             candidate = candidate.replace("会不会索要短信验证码", " ")
-            if not required:
+            if evidence is None:
                 candidate = candidate.replace("不会索要短信验证码", " ")
-        if required:
-            candidate = _without_negated(candidate, normalized)
+        if evidence is not None:
+            warranty = _WARRANTY_TERM.match(normalize_fact_text(evidence, synonyms))
+            if warranty:
+                candidate = _WARRANTY_TERM.sub(
+                    lambda term: term[0] if term["subject"] == warranty["subject"] else " ",
+                    candidate,
+                )
+            return contains_fact(_without_negated(candidate, normalized), normalized)
+        # 逐处排除对禁用说法的纠正，保留双重否定和其他位置的肯定说法。
+        candidate = re.sub(
+            _FORBIDDEN_FACT_DENIAL + re.escape(normalized),
+            lambda match: match[0] if match["outer_denial"] else " ",
+            candidate,
+        )
         return contains_fact(candidate, normalized)
 
     wrong_facts = [f"缺少「{fact['must_include']}」" for fact in facts
-                   if not matches(fact["must_include"], required=True)]
+                   if not matches(fact["must_include"], evidence=fact["evidence"])]
     wrong_facts.extend(f"出现禁止内容「{phrase}」" for phrase in expect["must_not_include"]
                        if matches(phrase))
     for evidence, expected_rate in expected_rates:
