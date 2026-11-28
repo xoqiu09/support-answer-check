@@ -9,13 +9,18 @@ from typing import Mapping, Protocol, TypedDict
 from urllib.request import Request, urlopen
 
 from .bots import run_bot
+from .checks import valid_retrieved
 
 
-class Answer(TypedDict):
+class _RequiredAnswer(TypedDict):
     case_id: str
     answer: str
     citations: list[str]
     handoff: bool
+
+
+class Answer(_RequiredAnswer, total=False):
+    retrieved: list[str]
 
 
 class Model(Protocol):
@@ -53,18 +58,22 @@ class ReplayModel:
         if case_id not in self._answers:
             raise ValueError(f"回放记录缺少用例 {case_id} 的回答")
         answer = self._answers[case_id]
-        return {**answer, "citations": answer["citations"].copy()}
+        replayed = {**answer, "citations": answer["citations"].copy()}
+        if "retrieved" in answer:
+            replayed["retrieved"] = answer["retrieved"].copy()
+        return replayed
 
 
 def _is_answer(row):
     return (
         isinstance(row, dict)
-        and row.keys() == Answer.__annotations__.keys()
+        and Answer.__required_keys__ <= row.keys() <= Answer.__annotations__.keys()
         and isinstance(row["case_id"], str)
         and isinstance(row["answer"], str)
         and isinstance(row["citations"], list)
         and all(isinstance(citation, str) for citation in row["citations"])
         and isinstance(row["handoff"], bool)
+        and valid_retrieved(row)
     )
 
 

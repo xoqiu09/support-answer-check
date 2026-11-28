@@ -93,6 +93,40 @@ class CheckTests(unittest.TestCase):
             with self.subTest(citations=citations):
                 self.assertEqual(self.check(self.answer | {"citations": citations}, facts=[]), [])
 
+    def test_every_citation_must_come_from_this_turn_when_retrieval_is_recorded(self):
+        answer = self.answer | {"citations": ["returns#1", "returns#2", "returns#3"]}
+        for retrieved, missing, expect in (
+            (["returns#3", "returns#1", "returns#2"], [], {}),
+            (["returns#2"], ["returns#1", "returns#3"], {}),
+            ([], ["returns#1", "returns#2", "returns#3"], {"facts": []}),
+        ):
+            with self.subTest(retrieved=retrieved, expect=expect):
+                reasons = self.check(answer | {"retrieved": retrieved}, **expect)
+                self.assertEqual(
+                    [reason["label"] for reason in reasons],
+                    ["CITATION_NOT_RETRIEVED"] if missing else [],
+                )
+                if missing:
+                    detail = reasons[0]["detail"]
+                    for passage_id in answer["citations"]:
+                        self.assertEqual(passage_id in detail, passage_id in missing)
+
+    def test_retrieved_passages_can_be_left_uncited(self):
+        answer = self.answer | {"retrieved": ["returns#1", "returns#2"]}
+        self.assertEqual(self.check(answer), [])
+
+    def test_unretrieved_citation_is_reported_alongside_overpromise(self):
+        answer = self.answer | {
+            "answer": "支持 7 天无理由退货，保证退款。",
+            "retrieved": ["returns#2"],
+        }
+        reasons = self.check(answer)
+        self.assertEqual(
+            [reason["label"] for reason in reasons],
+            ["OVERPROMISE", "CITATION_NOT_RETRIEVED"],
+        )
+        self.assertIn("returns#1", reasons[1]["detail"])
+
     def test_forbidden_fact_still_matters_without_required_facts(self):
         reasons = self.check(self.answer | {"answer": "30 天无理由"}, facts=[])
         self.assertEqual([reason["label"] for reason in reasons], ["WRONG_FACT"])

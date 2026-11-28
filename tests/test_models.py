@@ -12,7 +12,7 @@ from answercheck.kb import load_kb
 from answercheck.models import FakeModel, HttpChatModel
 from answercheck.report import build_report
 
-from .test_cli import CASES, DATA, KB, read_jsonl
+from .test_cli import ANSWERS, CASES, DATA, KB, read_jsonl
 
 
 def chat_reply(content):
@@ -40,6 +40,20 @@ class ReplayTests(unittest.TestCase):
                     *self.run_args, "--bot", "replay", "--recording", str(recording), "--out", str(output),
                 ]), 0)
                 self.assertEqual(output.read_bytes(), recording.read_bytes())
+
+    def test_replay_preserves_recorded_retrieval(self):
+        recording = self.temp / "recording.jsonl"
+        output = self.temp / "replayed.jsonl"
+        rows = read_jsonl(ANSWERS)
+        rows[-1]["retrieved"] = ["returns#1"]
+        recording.write_text(
+            "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rows),
+            encoding="utf-8",
+        )
+        self.assertEqual(main([
+            *self.run_args, "--bot", "replay", "--recording", str(recording), "--out", str(output),
+        ]), 0)
+        self.assertEqual(read_jsonl(output), list(reversed(rows)))
 
     def test_replay_cli_reports_missing_case_and_writes_no_output(self):
         recording = self.temp / "empty.jsonl"
