@@ -599,6 +599,24 @@ class CliTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(out.read_bytes(), (reports / "agree-naive.json").read_bytes())
 
+    def test_agree_rejects_duplicate_labels_in_either_order(self):
+        report = DATA.parent / "reports" / "naive.json"
+        labels = DATA / "labels" / "naive.jsonl"
+        rows = read_jsonl(labels)
+        duplicate = label_case("c01", "fail", "WRONG_FACT")
+        for position, invalid_rows in (("末尾", [*rows, duplicate]), ("开头", [duplicate, *rows])):
+            with self.subTest(position=position):
+                invalid = self.write_rows("duplicate-labels.jsonl", invalid_rows)
+                out = self.temp / f"agree-{position}.json"
+                result = self.cli("agree", "--report", report, "--labels", invalid, "--out", out)
+                self.assertEqual(result.returncode, 2, result.stderr or "重复标注仍生成报告")
+                self.assertIn("c01 标注重复", result.stderr)
+                self.assertFalse(out.exists())
+
+        result = self.cli("agree", "--report", report, "--labels", labels)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout)["confusion"]["both_pass"], 10)
+
     def test_agree_rejects_different_case_ids(self):
         reports = DATA.parent / "reports"
         report = reports / "naive.json"
@@ -649,6 +667,23 @@ class CliTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
         self.assertEqual(result.stdout.splitlines(), [
             "退步（通过变为不通过）", "c01", "修好（不通过变为通过）", "c02",
+        ])
+
+    def test_compare_rejects_invalid_verdicts_in_either_report(self):
+        base = self.write_report("base.json", [report_case("c01", "pass")])
+        new = self.write_report("new.json", [report_case("c01", "fail", "WRONG_FACT")])
+        invalid = self.write_report("invalid.json", [report_case("c01", "failed", "WRONG_FACT")])
+        for side, base_report, new_report in (("新版", base, invalid), ("原版", invalid, new)):
+            with self.subTest(side=side):
+                result = self.cli("compare", "--base", base_report, "--new", new_report)
+                self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+                self.assertIn(f"{side}用例 c01 的判定值无效 'failed'", result.stderr)
+                self.assertEqual(result.stdout, "")
+
+        result = self.cli("compare", "--base", base, "--new", new)
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertEqual(result.stdout.splitlines(), [
+            "退步（通过变为不通过）", "c01", "修好（不通过变为通过）", "无",
         ])
 
     def test_compare_rejects_reports_with_different_case_ids(self):
