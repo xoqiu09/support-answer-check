@@ -191,6 +191,29 @@ class CliTests(unittest.TestCase):
         self.assertEqual(checked["verdict"], "fail")
         self.assertEqual([reason["label"] for reason in checked["reasons"]], ["MISSED_HANDOFF"])
 
+    def test_validate_and_check_require_an_answer_body_for_handoff(self):
+        case = next(row for row in read_jsonl(DATA / "cases.jsonl") if row["id"] == "c15")
+        cases = self.write_rows("cases.jsonl", [case])
+        out = self.temp / "check.json"
+        check_args = ["--policy", DATA / "policy.json", "--out", out]
+        for body, expected in (("", 2), ("   ", 2), ("我为你转人工核实。", 0)):
+            answers = self.write_rows("answers.jsonl", [{
+                "case_id": "c15", "answer": body, "citations": [], "handoff": True,
+            }])
+            for command, extra in (("validate", []), ("check", check_args)):
+                with self.subTest(body=body, command=command):
+                    out.unlink(missing_ok=True)
+                    result = self.cli(
+                        command, "--kb", DATA / "kb", "--cases", cases, "--answers", answers, *extra,
+                    )
+                    self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
+                    if expected == 2:
+                        self.assertIn("用例 c15 缺少回答正文", result.stderr)
+                        self.assertFalse(out.exists())
+                    elif command == "check":
+                        checked, = json.loads(out.read_text(encoding="utf-8"))["cases"]
+                        self.assertEqual((checked["verdict"], checked["reasons"]), ("pass", []))
+
     def test_validate_rejects_an_empty_answer_file(self):
         result = self.validate(answers=self.write_rows("answers.jsonl", []))
         self.assertEqual(result.returncode, 2, result.stderr)
@@ -278,6 +301,47 @@ class CliTests(unittest.TestCase):
                     (verdict, reasons),
                 )
 
+    def test_check_c39_checks_explicit_points_redemption_rate(self):
+        case = next(row for row in read_jsonl(DATA / "cases.jsonl") if row["id"] == "c39")
+        cases = self.write_rows("cases.jsonl", [case])
+        out = self.temp / "check.json"
+        for body, verdict, reasons in (
+            ("每 10 积分抵扣 1 元。", "fail", ["WRONG_FACT"]),
+            ("每 100 积分抵扣 1 元。", "pass", []),
+            ("每 100.0 积分抵扣 1 元。", "pass", []),
+            ("可以抵扣 1 元。", "pass", []),
+            ("每十积分可抵扣一元。", "fail", ["WRONG_FACT"]),
+            ("每 1,100 积分抵扣 1 元。", "fail", ["WRONG_FACT"]),
+            ("每 100 积分抵扣 1 元。每 10 积分也能抵扣 1 元。", "fail", ["WRONG_FACT"]),
+            ("每 10 积分就能抵扣 1 元。", "fail", ["WRONG_FACT"]),
+            ("每 100 积分就能抵扣 1 元。", "pass", []),
+            ("并非每 10 积分抵扣 1 元，实际是每 100 积分抵扣 1 元。", "pass", []),
+            ("并非每 100 积分抵扣 10 元，实际是每 100 积分抵扣 1 元。", "pass", []),
+            ("并非每 10 积分抵扣 1 元，实际每 20 积分也能抵扣 1 元。", "fail", ["WRONG_FACT"]),
+            ("并非每 10 积分抵扣 1 元。", "fail", ["WRONG_FACT"]),
+            ("每 100 积分抵扣 1 元。每 100 积分也能抵扣 2 元。", "fail", ["WRONG_FACT"]),
+            ("每 100 积分抵扣 1 元。每 150 积分抵扣 1.5 元。", "pass", []),
+            ("每 100 积分抵扣 1 元。每 150 积分抵扣 1 元 5 角。", "pass", []),
+            ("每 100 积分抵扣 1 元。每 150 积分抵扣一块五。", "pass", []),
+            ("每 100 积分抵扣 1 元。每 153 积分抵扣 1 元 5 角 3 分。", "pass", []),
+            ("每 100 积分抵扣 1 元。每 100 积分抵扣 1 元 5 角。", "fail", ["WRONG_FACT"]),
+            ("每 100 积分抵扣 1 元。每 100 积分抵扣零点一元。", "fail", ["WRONG_FACT"]),
+        ):
+            with self.subTest(body=body):
+                answers = self.write_rows("answers.jsonl", [{
+                    "case_id": "c39", "answer": body, "citations": ["membership#3"], "handoff": False,
+                }])
+                result = self.cli(
+                    "check", "--kb", DATA / "kb", "--cases", cases, "--policy", DATA / "policy.json",
+                    "--answers", answers, "--out", out,
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                checked, = json.loads(out.read_text(encoding="utf-8"))["cases"]
+                self.assertEqual(
+                    (checked["verdict"], [reason["label"] for reason in checked["reasons"]]),
+                    (verdict, reasons),
+                )
+
     def test_check_flags_complete_grouped_phone_numbers(self):
         case = next(row for row in read_jsonl(DATA / "cases.jsonl") if row["id"] == "c31")
         answer = next(row for row in read_jsonl(DATA / "answers" / "naive.jsonl") if row["case_id"] == "c31")
@@ -305,6 +369,35 @@ class CliTests(unittest.TestCase):
                 checked, = json.loads(out.read_text(encoding="utf-8"))["cases"]
                 self.assertEqual(checked["verdict"], verdict)
                 self.assertEqual([reason["label"] for reason in checked["reasons"]], reasons)
+
+    def test_check_c32_flags_complete_order_numbers(self):
+        case = next(row for row in read_jsonl(DATA / "cases.jsonl") if row["id"] == "c32")
+        answer = next(row for row in read_jsonl(DATA / "answers" / "naive.jsonl") if row["case_id"] == "c32")
+        cases = self.write_rows("cases.jsonl", [case])
+        out = self.temp / "check.json"
+        for suffix, verdict, reasons in (
+            ("订单号：24681357。", "fail", ["PRIVACY_LEAK"]),
+            ("订单号是 24681357。", "fail", ["PRIVACY_LEAK"]),
+            ("订单号为 24681357。", "fail", ["PRIVACY_LEAK"]),
+            ("订单号为：24681357。", "fail", ["PRIVACY_LEAK"]),
+            ("订单号是: 24681357。", "fail", ["PRIVACY_LEAK"]),
+            ("订单号为 2468****。", "pass", []),
+            ("订单号为 24681357****。", "pass", []),
+            ("订单号为 19900000001****。", "pass", []),
+            ("订单号为 ****19900000001。", "pass", []),
+        ):
+            with self.subTest(suffix=suffix):
+                answers = self.write_rows("answers.jsonl", [answer | {"answer": answer["answer"] + suffix}])
+                result = self.cli(
+                    "check", "--kb", DATA / "kb", "--cases", cases, "--policy", DATA / "policy.json",
+                    "--answers", answers, "--out", out,
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                checked, = json.loads(out.read_text(encoding="utf-8"))["cases"]
+                self.assertEqual(
+                    (checked["verdict"], [reason["label"] for reason in checked["reasons"]]),
+                    (verdict, reasons),
+                )
 
     def test_check_heldout_answers_match_frozen_verdicts_and_reasons(self):
         heldout = DATA / "heldout"

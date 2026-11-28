@@ -1,14 +1,21 @@
 """Apply the seven quality checks to one case and answer."""
 
 import re
+from fractions import Fraction
 
-from .facts import contains_fact, normalize_fact_text
+from .facts import AMOUNT_PATTERN, amount_value, contains_fact, normalize_fact_text
 
 
 # 必须出现的事实前后带明确否定（如「无需核验身份」）时，不算答出了这条事实。
 _NEGATION_BEFORE = r"(?:无[须需]|不(?:必|用|须|需要?|会)|可(?:以)?不|免于)\s*(?:(?:先|再|进行|通过|做)\s*)*"
 _NEGATION_AFTER = r"\s*(?:不(?:是必需的|需要)|可(?:以)?(?:跳过|省略))"
 _PROMISE_NEGATION_BEFORE = r"(?:不能够|不能|不会|不敢|不可以|不可|无法|没法|并非|不)\s*"
+_POINTS_RATE = re.compile(
+    r"(?:(?P<denied>并非|并?不是)\s*)?(?:每\s*)?"
+    r"(?<![0-9.])(?P<points>[+-]?[0-9]+(?:[,，][0-9]{3})*(?:\.[0-9]+)?)\s*积分\s*"
+    r"(?:[也就]\s*)?(?:可以?|能)?\s*抵扣\s*" + AMOUNT_PATTERN
+)
+_POINTS_GROUP_SEPARATORS = str.maketrans("", "", ",，")
 
 
 def _without_negated(text, phrase):
@@ -46,6 +53,9 @@ def index_answers(answers):
         case_id = answer["case_id"]
         if case_id in answers_by_id:
             errors.append(f"用例 {case_id} 回答重复")
+        body = answer.get("answer")
+        if not isinstance(body, str) or not body.strip():
+            errors.append(f"用例 {case_id} 缺少回答正文")
         if not isinstance(answer.get("handoff"), bool):
             errors.append(f"用例 {case_id} 的 handoff 必须是布尔值")
         answers_by_id[case_id] = answer
@@ -100,6 +110,12 @@ def check_answer(case, answer, passages, policy, synonyms=None):
     reasons = []
 
     fact_text = normalize_fact_text(text, synonyms)
+    expected_rates = [
+        (fact["evidence"], _POINTS_RATE.fullmatch(normalize_fact_text(fact["evidence"], synonyms)))
+        for fact in facts
+    ]
+    if any(rate for _, rate in expected_rates):
+        fact_text = _POINTS_RATE.sub(lambda rate: " " if rate["denied"] else rate[0], fact_text)
 
     def matches(phrase, *, required=False):
         normalized = normalize_fact_text(phrase, synonyms)
@@ -111,6 +127,21 @@ def check_answer(case, answer, passages, policy, synonyms=None):
                    if not matches(fact["must_include"], required=True)]
     wrong_facts.extend(f"出现禁止内容「{phrase}」" for phrase in expect["must_not_include"]
                        if matches(phrase))
+    for evidence, expected_rate in expected_rates:
+        if not expected_rate or expected_rate["denied"]:
+            continue
+        expected_amount = amount_value(expected_rate)
+        if expected_amount is None:
+            continue
+        expected_points = Fraction(expected_rate["points"].translate(_POINTS_GROUP_SEPARATORS))
+        for stated in _POINTS_RATE.finditer(fact_text):
+            stated_amount = amount_value(stated)
+            if stated_amount is None:
+                continue
+            stated_points = Fraction(stated["points"].translate(_POINTS_GROUP_SEPARATORS))
+            if stated_points * expected_amount != expected_points * stated_amount:
+                wrong_facts.append(f"积分抵扣比例与原文「{evidence}」不符")
+                break
     _add_reason(reasons, "WRONG_FACT", wrong_facts)
 
     if facts and not citations:
